@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, List
 
 from pygls.workspace import TextDocument
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 import time
 from lsprotocol import types
@@ -21,22 +21,32 @@ class AnalysisSubsystem:
     The lsp side callers just submit the document and the event to this subsystem, wich handeles everything else. 
     
     Functionality includes:
-        debounce time
-        optional cancelation
-        status gathering
-        max_file_size checks. 
-        Capping the amount of threads. 
+        debounce time (Done)
+        optional cancelation (Not yet implemented)
+        status gathering (Done)
+        max_file_size checks.  (Done)
+        Capping the amount of threads.  (Done)
 
-    Configuration is the following:
+    Configuration for what analysises to run is the following:
         ["AnalysisSubsystem"][event] = ["analysis_types", "list"]
+
+    Full exprected configuration schema is: 
+        The expected configuration structure is:
+            at ls.config["AnalysisSubsystem"] is a: 
+                {
+                    "write": ["list", "of", "analyses", "to", "run"],
+                    "open": ["list", "of", "analyses", "to", "run"],
+                    "change": ["list", "of", "analyses", "to", "run"],
+                    "max_threads": 4
+                }
 
     """
     def __init__(self, ls: AIDiagnosLSP) -> None:
         self.ls = ls
         self.config = ls.config["AnalysisSubsystem"]
         self.executor = ThreadPoolExecutor(max_workers=self.config["max_threads"])
-        self.submited_analyses = {}
-        self.last_analysed_at = {}
+        self.submited_analyses: dict[str, dict[str, Future]] = {}
+        self.last_analysed_at: dict[str, dict[str, float]] = {}
 
         for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
             self.submited_analyses[i] = {}
@@ -60,7 +70,8 @@ class AnalysisSubsystem:
                 {
                     "write": ["list", "of", "analyses", "to", "run"],
                     "open": ["list", "of", "analyses", "to", "run"],
-                    "change": ["list", "of", "analyses", "to", "run"]
+                    "change": ["list", "of", "analyses", "to", "run"],
+                    ...
                 }
         """
 
@@ -104,7 +115,7 @@ class AnalysisSubsystem:
         """
         message = "AI diagnos status:"
         for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
-            for j in self.submited_analyses[i].items:
+            for j in self.submited_analyses[i].items():
                 if j[1].done():
                     message = message + f"Analysis done for for file at {j[0]} \n"
                     message = message + f"    The analysis is of type {i} \n"

@@ -208,3 +208,6 @@ __marimo__/
 
 # uv cache dir
 .uv-cache/
+diagnostics.db
+diagnostics.db-shm
+diagnostics.db-wal

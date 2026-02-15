@@ -16,6 +16,8 @@ dependencies = [
 ai-diagnos-lsp = "ai_diagnos_lsp.main:main"
 
 [tool.uv]
-resultion = "lowest-direct"
-cache_dir = ".uv-cache"
-no_cache = false
+resolution = "lowest-direct"
+cache-dir = ".uv-cache"
+no-cache = false
+concurrent-builds = 1
+package = true

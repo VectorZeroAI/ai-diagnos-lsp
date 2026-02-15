@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 from langchain_core.prompts import ChatPromptTemplate
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.prompts.general_analysis_prompt import GENERAL_ANALYSIS_PROMPT
+
+from .prompts.general_analysis_system_prompt import GENERAL_ANALYSIS_SYSTEM_PROMPT
 
 def BasicAnalysisPromptFactory() -> ChatPromptTemplate:
     """
@@ -14,7 +15,7 @@ def BasicAnalysisPromptFactory() -> ChatPromptTemplate:
     
 
     GeneralAnalysisPrompt = ChatPromptTemplate.from_messages([
-            ("system", f"{GENERAL_ANALYSIS_PROMPT}"),
+            ("system", f"{GENERAL_ANALYSIS_SYSTEM_PROMPT}"),
             ("human", "\n{{file_content}}\n\n"),
             ], template_format="mustache")
     return GeneralAnalysisPrompt

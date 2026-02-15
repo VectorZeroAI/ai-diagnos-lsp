@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnableSerializable
 from pydantic import BaseModel
 from pathlib import Path
 
-from ai_diagnos_lsp.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
 
 
 def BasicChainOpenrouterFactory(model_openrouter: str, api_key_openrouter: str) -> RunnableSerializable[dict[Any, Any], Any]:

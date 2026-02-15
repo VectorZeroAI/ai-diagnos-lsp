@@ -4,6 +4,9 @@ from typing import Sequence, Any
 
 from lsprotocol import types
 
+import os
+import logging
+
 from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
 def main():
@@ -20,8 +23,12 @@ def main():
         """
 
         assert params.initialization_options is not None
+        if os.getenv("AI_DIAGNOS_LOG"):
+            logging.info(f"gotten the initialization options of {params.initialization_options}")
         for i in params.initialization_options:
             ls.config[i] = params.initialization_options.get(i)
+            if os.getenv("AI_DIAGNOS_LOG"):
+                logging.info(f"set parameter ls.config[{i}] to value {ls.config[i]}")
 
     def on_initialised(ls: AIDiagnosLSP, params: types.InitializedParams):
         """ Callback on initialisation completion """

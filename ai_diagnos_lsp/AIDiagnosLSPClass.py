@@ -8,7 +8,7 @@ from pygls.workspace import TextDocument
 from lsprotocol import types
 import time
 
-from ai_diagnos_lsp.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsHandlingSubsystemFactory
 
 class AIDiagnosLSP(LanguageServer):
@@ -16,6 +16,7 @@ class AIDiagnosLSP(LanguageServer):
     My language server class. 
     It is pull diagnostics based. 
     """
+    SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "Logic", "Style", "Security", "Deep"]
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.diagnostics = {}

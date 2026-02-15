@@ -7,15 +7,16 @@ from pygls.workspace import TextDocument
 import logging
 import os
 import threading
+from pathlib import Path
 
-from ai_diagnos_lsp.analysers.chains.BasicChainGemini import BasicChainGeminiFactory
-from ai_diagnos_lsp.analysers.chains.BasicChainOmniprovider import BasicChainOmniproviderFactory
-from ai_diagnos_lsp.analysers.chains.BasicChainOpenrouter import BasicChainOpenrouterFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.BasicChainGemini import BasicChainGeminiFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.BasicChainOmniprovider import BasicChainOmniproviderFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.BasicChainOpenrouter import BasicChainOpenrouterFactory
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
-def BasicDiagnoseFunctionWorker(document: TextDocument, ls: AIDiagnosLSP):
+def BasicDiagnoseFunctionWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
     """
     The Analyser and diagnostics provider thread . 
     """
@@ -101,12 +102,18 @@ def BasicDiagnoseFunctionWorker(document: TextDocument, ls: AIDiagnosLSP):
 
         tmp = None
 
-        def LangchainInvokingThread(document: TextDocument):
+        def LangchainInvokingThread(document: TextDocument | Path):
             try:
                 nonlocal tmp
-                tmp = BasicChain.invoke({
-                    "file_content": document.source
-                    })
+                if type(document) is TextDocument:
+                    tmp = BasicChain.invoke({
+                        "file_content": document.source
+                        })
+                elif type(document) is Path:
+                    tmp = BasicChain.invoke({
+                        "file_content": document.read_text()
+                        })
+
                 langchain_completed_event.set()
             except Exception as e:
                 ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Langchain invoking thread errored out with the following error : {e}"))
@@ -117,7 +124,10 @@ def BasicDiagnoseFunctionWorker(document: TextDocument, ls: AIDiagnosLSP):
 
         if os.getenv("AI_DIAGNOS_LOG") is not None:
             logging.info("starting the chain")
-            logging.info(f"chain started with input document as {document.source}")
+            if type(document) is TextDocument:
+                logging.info(f"chain started with input document as {document.source}")
+            elif type(document) is Path:
+                logging.info(f"chain started with input document as {document.read_text()}")
 
         def LangchainStillRunningPingerThread(ls, show_progress_every_ms: int):
             if os.getenv("AI_DIAGNOS_LOG") is not None:
@@ -159,11 +169,18 @@ def BasicDiagnoseFunctionWorker(document: TextDocument, ls: AIDiagnosLSP):
 
 
         try:
-            ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
-                                                                    document_uri=document.uri,
-                                                                    analysis_type="Basic"
-                                                                )
-            ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.uri)
+            if type(document) is TextDocument:
+                ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                        document_uri=document.uri,
+                                                                        analysis_type="Basic"
+                                                                    )
+                ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.uri)
+            elif type(document) is Path:
+                ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                        document_uri=document.as_uri(),
+                                                                        analysis_type="Basic"
+                                                                    )
+                ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.as_uri())
 
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:

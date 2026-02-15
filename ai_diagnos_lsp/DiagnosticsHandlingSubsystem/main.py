@@ -3,7 +3,7 @@
 from __future__ import annotations
 import sqlite3
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 import time
 import logging
 import os
@@ -12,7 +12,7 @@ from urllib.parse import urlparse, unquote
 
 from lsprotocol import types
 
-from ai_diagnos_lsp.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsPydanticObjekt
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsPydanticObjekt
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
@@ -26,9 +26,7 @@ class DiagnosticsHandlingSubsystemClass:
     
     Will propably get its own directory once actually implemented. 
     """
-
-    SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "Logic", "Style", "Security", "Deep"]
-
+    
     def __init__(self,
                  ls: AIDiagnosLSP,
                  sqlite_db_name,
@@ -86,6 +84,10 @@ class DiagnosticsHandlingSubsystemClass:
         curr.execute(VIEW_CREATION_SCRIPT)
 
         curr.close()
+
+    @property
+    def SUPPORTED_DIAGNOSTIC_TYPES(self) -> List[str]:
+        return self.ls.SUPPORTED_DIAGNOSTIC_TYPES
 
     def register_file_write(self, document_uri: str):
         curr = self.conn.cursor()

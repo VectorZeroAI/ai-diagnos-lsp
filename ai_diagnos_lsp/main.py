@@ -10,7 +10,7 @@ def main():
     """
     The server setup function. 
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.8.4 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.9.2 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):

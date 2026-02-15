@@ -9,6 +9,10 @@ if TYPE_CHECKING:
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import time
+from lsprotocol import types
+
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
 
 class AnalysisSubsystem:
     """
@@ -24,7 +28,7 @@ class AnalysisSubsystem:
         Capping the amount of threads. 
 
     Configuration is the following:
-        ["AnalysisSubsystem"][event] = [analysis_types]
+        ["AnalysisSubsystem"][event] = ["analysis_types", "list"]
     """
     def __init__(self, ls: AIDiagnosLSP) -> None:
         self.ls = ls
@@ -47,5 +51,29 @@ class AnalysisSubsystem:
 
         To understand what analysers to submit, it does pattern matching over the configuration. 
         """
+
+        for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
+            self.submited_analyses[i] = {}
+
+        if type(doc) is TextDocument:
+            uri = doc.uri
+        elif type(doc) is Path:
+            uri = doc.as_uri()
+        else:
+            raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
+        
+        if "Basic" in self.config[event]:
+            if time.time() - self.last_analysed_at["Basic"][uri] < self.ls.config["debounce_ms"]:
+                self.submited_analyses["Basic"][uri] = self.executor.submit(BasicDiagnoseFunctionWorker, doc, self.ls)
+                self.last_analysed_at["Basic"][uri] = time.time()
+            else:
+                self.ls.window_show_message()
+
+        if "CrossFile" in self.config[event]:
+            raise NotImplementedError("Cross file diagnostics not yet implemented")
+            #self.submited_analyses["CrossFile"][uri] = self.executor.submit(CrossFileDiagnoseFunctionWorker, doc, self.ls)
+
+        # And so on for every member of the ls.SUPPORTED_DIAGNOSTICS_TYPES list. 
+        
 
 

@@ -14,3 +14,8 @@ dependencies = [
 
 [project.scripts]
 ai-diagnos-lsp = "ai_diagnos_lsp.main:main"
+
+[tool.uv]
+resultion = "lowest-direct"
+cache_dir = ".uv-cache"
+no_cache = false

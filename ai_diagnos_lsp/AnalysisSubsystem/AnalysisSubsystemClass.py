@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal, List
+from typing import TYPE_CHECKING, Literal
 
 from pygls.workspace import TextDocument
 
@@ -129,4 +129,8 @@ class AnalysisSubsystem:
         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(3), message))
         
 
+def AnalysisSubsystemClassFactory(ls: AIDiagnosLSP):
+    return AnalysisSubsystem(
+            ls=ls
+            )
 

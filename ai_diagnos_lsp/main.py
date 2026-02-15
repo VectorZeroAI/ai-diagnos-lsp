@@ -10,7 +10,7 @@ def main():
     """
     The server setup function. 
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.9.2 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.9.3 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
@@ -23,26 +23,38 @@ def main():
         for i in params.initialization_options:
             ls.config[i] = params.initialization_options.get(i)
 
+    def on_initialised(ls: AIDiagnosLSP, params: types.InitializedParams):
+        """ Callback on initialisation completion """
+        ls.DiagnosticsHandlingSubsystem.load_all_diagnostics()
+
     @server.feature(types.TEXT_DOCUMENT_DID_CHANGE)
     def on_did_change(ls: AIDiagnosLSP, params: types.DidChangeTextDocumentParams):
         """ Publish diagnostics from DB to the client on change. e.g. refresh them. """
+
         ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(params.text_document.uri)
 
     @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
     def did_open(ls: AIDiagnosLSP, params: types.DidOpenTextDocumentParams):
         """ Try co load saved diagnostics forthe file, if fails, analyse.  """
+
         doc = ls.workspace.get_text_document(params.text_document.uri)
 
         if not ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(doc.uri):
-            ls.BasicDiagnose(doc)
+
+            ls.AnalysisSubsystem.submit_document_for_analysis(doc, "open")
+
             ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(doc.uri)
 
     @server.feature(types.TEXT_DOCUMENT_DID_SAVE)
     def did_save(ls: AIDiagnosLSP, params: types.DidSaveTextDocumentParams):
         """ Diagnose each document when it is saved, e.g. on save. As was done by the previous version of the plugin """
+
         doc = ls.workspace.get_text_document(params.text_document.uri)
+
         ls.DiagnosticsHandlingSubsystem.register_file_write(doc.uri)
-        ls.BasicDiagnose(doc)
+
+        ls.AnalysisSubsystem.submit_document_for_analysis(doc, "write")
+
         ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(doc.uri)
 
     @server.feature(

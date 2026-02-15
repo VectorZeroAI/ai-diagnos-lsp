@@ -10,6 +10,7 @@ import time
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsHandlingSubsystemFactory
+from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemClassFactory
 
 class AIDiagnosLSP(LanguageServer):
     """
@@ -24,6 +25,7 @@ class AIDiagnosLSP(LanguageServer):
         self.config = {}
         self.diagnostics_lock = threading.Lock()
         self.DiagnosticsHandlingSubsystem = DiagnosticsHandlingSubsystemFactory(self)
+        self.AnalysisSubsystem = AnalysisSubsystemClassFactory(self)
 
         if os.getenv("AI_DIAGNOS_LOG") is not None:
             logging.basicConfig(

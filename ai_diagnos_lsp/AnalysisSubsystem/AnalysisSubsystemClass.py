@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from pygls.workspace import TextDocument
 
@@ -13,6 +13,13 @@ import time
 from lsprotocol import types
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
+
+class AnalysisSubsystemConfig(TypedDict):
+    write: list[str]
+    open: list[str]
+    change: list[str]
+    command: list[str]
+    max_threads: int
 
 class AnalysisSubsystem:
     """
@@ -42,18 +49,20 @@ class AnalysisSubsystem:
 
     """
     def __init__(self, ls: AIDiagnosLSP) -> None:
-        self.ls = ls
-        self.config = ls.config["AnalysisSubsystem"]
-        self.executor = ThreadPoolExecutor(max_workers=self.config["max_threads"])
-        self.submited_analyses: dict[str, dict[str, Future]] = {}
-        self.last_analysed_at: dict[str, dict[str, float]] = {}
+        try:
+            self.ls = ls
+            self.executor = ThreadPoolExecutor(max_workers=self.ls.config["AnalysisSubsystem"]["max_threads"])
+            self.submited_analyses: dict[str, dict[str, Future[None]]] = {}
+            self.last_analysed_at: dict[str, dict[str, float]] = {}
 
-        for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
-            self.submited_analyses[i] = {}
+            for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
+                self.submited_analyses[i] = {}
+        except Exception as e:
+            raise RuntimeError(f"Error in the __init__ method in the Analysis subsystem ERROR = {e}") from e
 
     def submit_document_for_analysis(self,
                                      doc: TextDocument | Path,
-                                     event: Literal["write", "open", "change"]
+                                     event: Literal["write", "open", "change", "command"]
                                      ):
         """
         This is the document submission for diagnostics function. 
@@ -71,39 +80,41 @@ class AnalysisSubsystem:
                     "write": ["list", "of", "analyses", "to", "run"],
                     "open": ["list", "of", "analyses", "to", "run"],
                     "change": ["list", "of", "analyses", "to", "run"],
+                    "command":  ["list", "of", "analyses", "to", "run"],
                     ...
                 }
         """
-
-
-        if type(doc) is TextDocument:
-            uri = doc.uri
-            if len(doc.lines) > self.ls.config["max_file_size"]:
-                self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Filesize bigger then max file size defined at config"))
-                return
-        elif type(doc) is Path:
-            uri = doc.as_uri()
-            with doc.open() as f:
-                if len(f.readlines()) > self.ls.config["max_file_size"]:
+        try:
+            if type(doc) is TextDocument:
+                uri = doc.uri
+                if len(doc.lines) > self.ls.config["max_file_size"]:
                     self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Filesize bigger then max file size defined at config"))
                     return
-        else:
-            raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
-        
-        if "Basic" in self.config[event]:
-            if time.time() - self.last_analysed_at["Basic"][uri] < self.ls.config["debounce_ms"]:
-                self.submited_analyses["Basic"][uri] = self.executor.submit(BasicDiagnoseFunctionWorker, doc, self.ls)
-                self.last_analysed_at["Basic"][uri] = time.time()
+            elif type(doc) is Path:
+                uri = doc.as_uri()
+                with doc.open() as f:
+                    if len(f.readlines()) > self.ls.config.get("max_file_size"):
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Filesize bigger then max file size defined at config"))
+                        return
             else:
-                # TODO : Implement a configuration option for "at debounce do".
-                # The options may be "ignore_new" , "cancell_old_and_start_new"
-                self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+                raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
+            
+            if "Basic" in self.ls.config["AnalysisSubsystem"][event]:
+                if time.time() - self.last_analysed_at["Basic"][uri] < self.ls.config["debounce_ms"]:
+                    self.submited_analyses["Basic"][uri] = self.executor.submit(BasicDiagnoseFunctionWorker, doc, self.ls)
+                    self.last_analysed_at["Basic"][uri] = time.time()
+                else:
+                    # TODO : Implement a configuration option for "at debounce do".
+                    # The options may be "ignore_new" , "cancell_old_and_start_new"
+                    self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
 
 
-        if "CrossFile" in self.config[event]:
-            raise NotImplementedError("Cross file diagnostics not yet implemented")
+            if "CrossFile" in self.ls.config["AnalysisSubsystem"][event]:
+                raise NotImplementedError("Cross file diagnostics not yet implemented")
 
-        # And so on for every member of the ls.SUPPORTED_DIAGNOSTICS_TYPES list. 
+            # And so on for every member of the ls.SUPPORTED_DIAGNOSTICS_TYPES list. 
+        except Exception as e:
+            raise RuntimeError(f"Otherwise uncaught exception happened in Analysis Subsystem Class file in submit document for analyis method. {e}") from e
 
 
 

@@ -33,16 +33,16 @@ class DiagnosticsHandlingSubsystemClass:
                  ttl_seconds_until_deletion,
                  ttl_seconds_until_invalidation
                  ) -> None:
+        self.conn = sqlite3.connect(sqlite_db_name, autocommit=True, check_same_thread=False)
+        curr = self.conn.cursor()
+
+
         self.ls = ls
         self.ttl_seconds_until_deletion = ttl_seconds_until_deletion
         self.db_lock = threading.Lock()
         self.ttl_seconds_until_invalidation = ttl_seconds_until_invalidation
 
-        threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
-        threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
         
-        self.conn = sqlite3.connect(sqlite_db_name, autocommit=True, check_same_thread=False)
-        curr = self.conn.cursor()
 
         # SQL DB initialisation
 
@@ -63,7 +63,7 @@ class DiagnosticsHandlingSubsystemClass:
                            PRAGMA foreign_keys=ON;
                            """)
 
-        for name in self.SUPPORTED_DIAGNOSTIC_TYPES:
+        for name in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
             curr.execute(f"""
             CREATE TABLE IF NOT EXISTS diagnostics_{name}(
                 uri TEXT NOT NULL,
@@ -76,18 +76,18 @@ class DiagnosticsHandlingSubsystemClass:
         VIEW_CREATION_SCRIPT = """
         CREATE VIEW IF NOT EXISTS all_diagnostics_view AS \n
         """
-        for name in self.SUPPORTED_DIAGNOSTIC_TYPES:
+        for name in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
             VIEW_CREATION_SCRIPT = VIEW_CREATION_SCRIPT + f"SELECT uri, '{name}' AS diagnostics_type, diagnostics, created_at FROM diagnostics_{name} \n \n"
-            if self.SUPPORTED_DIAGNOSTIC_TYPES.index(name) != len(self.SUPPORTED_DIAGNOSTIC_TYPES) - 1:
+            if self.ls.SUPPORTED_DIAGNOSTIC_TYPES.index(name) != len(self.ls.SUPPORTED_DIAGNOSTIC_TYPES) - 1:
                 VIEW_CREATION_SCRIPT = VIEW_CREATION_SCRIPT + "UNION ALL \n"
 
         curr.execute(VIEW_CREATION_SCRIPT)
 
-        curr.close()
+        threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
+        threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
 
-    @property
-    def SUPPORTED_DIAGNOSTIC_TYPES(self) -> List[str]:
-        return self.ls.SUPPORTED_DIAGNOSTIC_TYPES
+        curr.close()
+        return
 
     def register_file_write(self, document_uri: str):
         curr = self.conn.cursor()

@@ -13,13 +13,15 @@ def main():
     """
     The server setup function. 
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.9.3 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.9.4 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
         """
         The configuration getting and saving function. 
         pretty much sets the ls.config map
+
+        and returns the capabilities of the server
         """
 
         assert params.initialization_options is not None
@@ -30,8 +32,28 @@ def main():
             if os.getenv("AI_DIAGNOS_LOG"):
                 logging.info(f"set parameter ls.config[{i}] to value {ls.config[i]}")
 
+
+        return types.InitializeResult(
+                capabilities=types.ServerCapabilities(
+                    text_document_sync=types.TextDocumentSyncOptions(
+                        open_close= True, will_save=True,
+                        save=types.SaveOptions(include_text=True),
+                        change=types.TextDocumentSyncKind.Full
+                        ),
+                    diagnostic_provider=types.DiagnosticOptions(
+                        inter_file_dependencies=False, # TODO: DONT FORGET TO SET TO TRUE WHEN IMPLEMENTED
+                        workspace_diagnostics=False, # TODO: Set to true when implemented
+                        identifier="AI-diagnos-lsp"
+                        )
+                    )
+                )
+
+
+
+    @server.feature(types.INITIALIZED)
     def on_initialised(ls: AIDiagnosLSP, params: types.InitializedParams):
         """ Callback on initialisation completion """
+        ls.init_subsystems()
         ls.DiagnosticsHandlingSubsystem.load_all_diagnostics()
 
     @server.feature(types.TEXT_DOCUMENT_DID_CHANGE)
@@ -39,6 +61,10 @@ def main():
         """ Publish diagnostics from DB to the client on change. e.g. refresh them. """
 
         ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(params.text_document.uri)
+
+        doc = ls.workspace.get_text_document(params.text_document.uri)
+
+        ls.AnalysisSubsystem.submit_document_for_analysis(doc, "change")
 
     @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
     def did_open(ls: AIDiagnosLSP, params: types.DidOpenTextDocumentParams):
@@ -113,7 +139,7 @@ def main():
         return types.WorkspaceDiagnosticReport(items=items)
 
     @server.command("Analyse.Document")
-    def AnalyseDocument(ls: AIDiagnosLSP, params: Sequence[ Any | None ]):
+    def AnalyseDocument(ls: AIDiagnosLSP, params: Sequence[str]):
         """ Analyses a document by URI . REQUIRES a URI as its parameter """
         try:
             assert params[0] is not None
@@ -122,11 +148,11 @@ def main():
             ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt get the URI parameter due to the following error {e}"))
             return
         else:
-            ls.BasicDiagnose(doc)
+            ls.AnalysisSubsystem.submit_document_for_analysis(doc, "command")
             # TODO : Add good logging
     
     @server.command("Clear.AIDiagnostics")
-    def ClearAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[Any | None]):
+    def ClearAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[str]):
         """ Clears AI diagnostics for the provided URI """
         ls.diagnostics[params[0]] = (None, None)
         ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "successfully cleared the diagnostics"))

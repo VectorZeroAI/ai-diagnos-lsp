@@ -99,18 +99,21 @@ class AnalysisSubsystem:
             else:
                 raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
             
-            if "Basic" in self.ls.config["AnalysisSubsystem"][event]:
-                if time.time() - self.last_analysed_at["Basic"][uri] < self.ls.config["debounce_ms"]:
-                    self.submited_analyses["Basic"][uri] = self.executor.submit(BasicDiagnoseFunctionWorker, doc, self.ls)
-                    self.last_analysed_at["Basic"][uri] = time.time()
-                else:
-                    # TODO : Implement a configuration option for "at debounce do".
-                    # The options may be "ignore_new" , "cancell_old_and_start_new"
-                    self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+            try:
+                if "Basic" in self.ls.config["AnalysisSubsystem"][event]:
+                    if time.time() - self.last_analysed_at["Basic"][uri] < self.ls.config["debounce_ms"]:
+                        self.submited_analyses["Basic"][uri] = self.executor.submit(BasicDiagnoseFunctionWorker, doc, self.ls)
+                        self.last_analysed_at["Basic"][uri] = time.time()
+                    else:
+                        # TODO : Implement a configuration option for "at debounce do".
+                        # The options may be "ignore_new" , "cancell_old_and_start_new"
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
 
 
-            if "CrossFile" in self.ls.config["AnalysisSubsystem"][event]:
-                raise NotImplementedError("Cross file diagnostics not yet implemented")
+                if "CrossFile" in self.ls.config["AnalysisSubsystem"][event]:
+                    raise NotImplementedError("Cross file diagnostics not yet implemented")
+            except KeyError as e:
+                raise RuntimeError("Encountered a key error inside the config. ") from e
 
             # And so on for every member of the ls.SUPPORTED_DIAGNOSTICS_TYPES list. 
         except Exception as e:

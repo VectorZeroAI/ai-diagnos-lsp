@@ -257,12 +257,13 @@ class DiagnosticsHandlingSubsystemClass:
                         self.load_all_diagnostics()
                         if os.getenv("AI_DIAGNOS_LOG") is not None:
                             logging.info(f"Deleted all records for file {i[1]} because its last change time is {i[0]}")
-                time.sleep(360)
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.info("Checked all the files")
             except Exception as e:
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.error(f"TTLBasedDeletionThread encoutered the following problem : {e}")
+            finally:
+                time.sleep(360)
 
     def TTLBasedDiagnosticsInvalidationThread(self):
         """

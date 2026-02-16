@@ -105,7 +105,7 @@ class DiagnosticsHandlingSubsystemClass:
                 with self.db_lock:
                     curr.execute("""
                     INSERT INTO files(uri, last_changed_at) VALUES (?, ?)
-                                      """, (time.time(), document_uri))
+                                      """, (document_uri, time.time()))
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:
                 logging.error(f"register file write encoutered the following error: {e}")

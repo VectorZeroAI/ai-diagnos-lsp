@@ -21,7 +21,7 @@ class GeneralDiagnosticsPydanticObjekt(BaseModel):
 
     diagnostics: List[SingleDiagnostic]
 
-def GeneralDiagnosticsOutputParserFactory() -> PydanticOutputParser:
+def GeneralDiagnosticsOutputParserFactory() -> PydanticOutputParser[GeneralDiagnosticsPydanticObjekt]:
     """
     This is the output parsers Factory function. 
     IDK why I made it a factory function. I could have simply made it an importable class, but I guess

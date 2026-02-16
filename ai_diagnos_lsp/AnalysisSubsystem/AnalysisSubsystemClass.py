@@ -11,6 +11,13 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 import time
 from lsprotocol import types
+import logging
+import os
+
+if os.getenv("AI_DIAGNOS_LOG") is not None:
+    log = True
+else:
+    log = False
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
 
@@ -44,6 +51,7 @@ class AnalysisSubsystem:
                     "write": ["list", "of", "analyses", "to", "run"],
                     "open": ["list", "of", "analyses", "to", "run"],
                     "change": ["list", "of", "analyses", "to", "run"],
+                    "command": ["list", "of", "analyses", "to", "run"],
                     "max_threads": 4
                 }
 
@@ -57,7 +65,15 @@ class AnalysisSubsystem:
 
             for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
                 self.submited_analyses[i] = {}
+
+            for i in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
+                self.last_analysed_at[i] = {}
+
+            if log:
+                logging.info(f" Analysis Subsystem: gotten the config {self.ls.config} ")
         except Exception as e:
+            if log:
+                logging.error(f"Error in the __init__ method in the Analysis subsystem ERROR = {e}")
             raise RuntimeError(f"Error in the __init__ method in the Analysis subsystem ERROR = {e}") from e
 
     def submit_document_for_analysis(self,
@@ -98,22 +114,29 @@ class AnalysisSubsystem:
                         return
             else:
                 raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
+
+            for i in self.last_analysed_at:
+                uris = self.last_analysed_at[i].values()
+                if uri not in uris:
+                    self.last_analysed_at[i][uri] = 0
+
             
             try:
                 if "Basic" in self.ls.config["AnalysisSubsystem"][event]:
-                    if time.time() - self.last_analysed_at["Basic"][uri] < self.ls.config["debounce_ms"]:
+                    if time.time() - self.last_analysed_at["Basic"][uri] > self.ls.config["debounce_ms"] / 1000:
                         self.submited_analyses["Basic"][uri] = self.executor.submit(BasicDiagnoseFunctionWorker, doc, self.ls)
                         self.last_analysed_at["Basic"][uri] = time.time()
                     else:
                         # TODO : Implement a configuration option for "at debounce do".
-                        # The options may be "ignore_new" , "cancell_old_and_start_new"
                         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
 
 
                 if "CrossFile" in self.ls.config["AnalysisSubsystem"][event]:
                     raise NotImplementedError("Cross file diagnostics not yet implemented")
             except KeyError as e:
-                raise RuntimeError("Encountered a key error inside the config. ") from e
+                if log:
+                    logging.error(f"Encountered a key error inside the config. {e}")
+                raise RuntimeError(f"Encountered a key error inside the config. {e}") from e
 
             # And so on for every member of the ls.SUPPORTED_DIAGNOSTICS_TYPES list. 
         except Exception as e:

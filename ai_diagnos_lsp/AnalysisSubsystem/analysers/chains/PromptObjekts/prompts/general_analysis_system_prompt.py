@@ -43,56 +43,56 @@ Severity guidelines:
 
 Expected JSON example : 
 {
-    "diagnostics": [
-        {
-            "location": "The wrong spot",
-            "error_message": "Explanation of what is wrong there",
-            "severity_level": 1
-        },
-        {
-            "location": "The second wrong spot",
-            "error_message": "Explanation of what is wrong there",
-            "severity_level": 2
-        }
-    ]
+"diagnostics": [
+    {
+        "location": "The wrong spot",
+        "error_message": "Explanation of what is wrong there",
+        "severity_level": 1
+    },
+    {
+        "location": "The second wrong spot",
+        "error_message": "Explanation of what is wrong there",
+        "severity_level": 2
+    }
+]
 }
 
 Anouther Example of an expected valid JSON : 
 {
-    "diagnostics": [
-        {
-            "location": "def grep();",
-            "error_message": "Semicolon insdead of a colon in the function definition",
-            "severity_level":1
-        },
-        {
-            "location": "clas foo:",
-            "error_message": "'class' keyword misspelled",
-            "severity_level":1
-        }
-    ]
+"diagnostics": [
+    {
+        "location": "def grep();",
+        "error_message": "Semicolon insdead of a colon in the function definition",
+        "severity_level":1
+    },
+    {
+        "location": "clas foo:",
+        "error_message": "'class' keyword misspelled",
+        "severity_level":1
+    }
+]
 }
 Anouther Example of an expected valid JSON : 
 {
-    "diagnostics": [
-        {
-            "location": "if (x > 10 && x < 5)",
-            "error_message": "Logic error: condition can never be true (x cannot be simultaneously greater than 10 and less than 5)",
-            "severity_level": 1
-        }
-    ]
+"diagnostics": [
+    {
+        "location": "if (x > 10 && x < 5)",
+        "error_message": "Logic error: condition can never be true (x cannot be simultaneously greater than 10 and less than 5)",
+        "severity_level": 1
+    }
+]
 }
 
 BAD ANSWER EXAMPLE: 
 ```json
 {
-    "diagnostics": [
-        {
-            "location": "lol",
-            "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-            "severity_level": 1
-        }
-    ]
+"diagnostics": [
+    {
+        "location": "lol",
+        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
+        "severity_level": 1
+    }
+]
 
 }
 ```
@@ -100,13 +100,13 @@ REASON WHY BAD : Prefixing and ending with ``` . INCLUDING ``` IS NOT ALLOWED.
 
 ANOUTHER BAD ANSWER EXAMPLE: 
 {
-    "diagnostics": [
-        {
-            "location": "&quot lol &quot",
-            "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-            "severity_level": 1
-        }
-    ]
+"diagnostics": [
+    {
+        "location": "&quot lol &quot",
+        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
+        "severity_level": 1
+    }
+]
 
 }
 REASON WHY BAD : Usage of &quot . USAGE OF &quot or any other prefixing / suffixing pattern outside json IS NOT ALLOWED. 
@@ -115,13 +115,13 @@ REASON WHY BAD : Usage of &quot . USAGE OF &quot or any other prefixing / suffix
 
 If a location occures multiple times, you must specify wich occurance you mean, like this: 
 {
-    "diagnostics": [
-        {
-            "location": ["de grep():", 2],
-            "error_message": "misspelled def keyword inside function definition"
-            "severity_level": 1
-        }
-    ]
+"diagnostics": [
+    {
+        "location": ["de grep():", 2],
+        "error_message": "misspelled def keyword inside function definition"
+        "severity_level": 1
+    }
+]
 }
 This example means the second occurance of the "de grep():" pattern inside the code file. 
 """

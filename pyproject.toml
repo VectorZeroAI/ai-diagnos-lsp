@@ -21,3 +21,6 @@ cache-dir = ".uv-cache"
 no-cache = false
 concurrent-builds = 1
 package = true
+
+[tool.pyright]
+typeCheckingMode = "strict"

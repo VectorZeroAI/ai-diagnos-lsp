@@ -5,14 +5,23 @@ The cross file analysis worker thread
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+import threading
+from pathlib import Path
+import os
+import logging
+import time
+
 from pygls.workspace import TextDocument
 
 from lsprotocol import types
+
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 
 from .chains.LLM.BasicOmniproviderLLM import BasicOmniproviderLLMFactory
 from .chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
 from .chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
 from .chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
+from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromptFactory
 
 from utils.parser import get_cross_file_context
 
@@ -73,6 +82,95 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
         ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
         raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
 
-    prompt = 
+    prompt = CrossFileAnalysisPromptFactory()
 
+    output_parser = GeneralDiagnosticsOutputParserFactory()
+
+    chain = prompt | llm | output_parser
+
+
+
+    langchain_completed_event = threading.Event()
+    langchain_timed_out = threading.Event()
+    langchain_failed = threading.Event()
+
+    tmp = None
+
+    def LangchainInvokingThread(document: TextDocument | Path):
+        try:
+            nonlocal tmp
+            if type(document) is TextDocument:
+                tmp = chain.invoke({
+                    "file_content": document.source
+                    })
+            elif type(document) is Path:
+                tmp = chain.invoke({
+                    "file_content": document.read_text()
+                    })
+
+            langchain_completed_event.set()
+        except Exception as e:
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Langchain invoking thread errored out with the following error : {e}"))
+            langchain_completed_event.set()
+            langchain_failed.set()
+
+    threading.Thread(target=LangchainInvokingThread, args=(file,), daemon=True).start()
+
+    if os.getenv("AI_DIAGNOS_LOG") is not None:
+        logging.info("starting the chain")
+        if type(file) is TextDocument:
+            logging.info(f"chain started with input file as {file.source}")
+
+    def LangchainStillRunningPingerThread(ls: AIDiagnosLSP, show_progress_every_ms: int):
+        if os.getenv("AI_DIAGNOS_LOG") is not None:
+            logging.info("Langchain Pinger thread started")
+
+        counter = 1
+
+        while not (langchain_completed_event.is_set() or langchain_timed_out.is_set()):
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(3), f"Langchain still running [{counter}]"))
+            counter = counter + 1
+            time.sleep(show_progress_every_ms / 1000)
+            if os.getenv("AI_DIAGNOS_LOG") is not None:
+                logging.info("Langchain is still running")
+
+        if os.getenv("AI_DIAGNOS_LOG") is not None:
+            logging.info("Langchain Pinger thread exited")
+            
+    if ls.config['show_progress']:
+        threading.Thread(target=LangchainStillRunningPingerThread, args=(ls, ls.config['show_progress_every_ms']), daemon=True).start()
+
+    
+    timeout = ls.config['timeout']
+
+    if timeout > threading.TIMEOUT_MAX:
+        timeout = threading.TIMEOUT_MAX
+        
+    if langchain_completed_event.wait(timeout):
+        pass
+    else:
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Langchain timed out"))
+        return
+
+    if langchain_failed.is_set():
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "Langchain FAILED"))
+        return
+
+    
+    try:
+        ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                document_uri=file.uri,
+                                                                analysis_type="Basic"
+                                                            )
+        ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.uri)
+
+    except Exception as e:
+        if os.getenv("AI_DIAGNOS_LOG") is not None:
+            logging.error("Couldnt register diagnostics into Diagnostics handling subsystem")
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt register diagnostics due to the following reason: {e}"))
+        return
+    else:
+        if os.getenv("AI_DIAGNOS_LOG") is not None:
+            logging.info("sucsessfully registered the diagnostics into the Diagnostics handling subsystem")
+        return
 

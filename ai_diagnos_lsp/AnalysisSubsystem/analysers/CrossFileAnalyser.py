@@ -3,17 +3,18 @@
 The cross file analysis worker thread
 """
 from __future__ import annotations
-import builtins
 from typing import TYPE_CHECKING
 
 from pygls.workspace import TextDocument
+
+from lsprotocol import types
+
+from .chains.LLM.BasicOmniproviderLLM import BasicOmniproviderLLMFactory
+from .chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
+from .chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
+from .chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
+
 from utils.parser import get_cross_file_context
-from .chains.LLM import (
-        BasicGeminiLLM,
-        BasicGroqLLM,
-        BasicOmniproviderLLM,
-        BasicOpenrouterLLM
-)
 
 
 if TYPE_CHECKING:
@@ -50,19 +51,28 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
 
     elif ls.config["use_gemini"]:
 
-        BasicChain = BasicChainGeminiFactory(
+        llm = BasicGeminiLlmFactory(
                 api_key_gemini=ls.config["api_key_gemini"],
                 model_gemini=ls.config["model_gemini"],
-                fallback_models_gemini=ls.config.get("fallback_models_gemini")
+                fallback_gemini_models=ls.config.get("fallback_models_gemini")
                 )
 
     elif ls.config["use_openrouter"]:
-        BasicChain = BasicChainOpenrouterFactory(
+        llm = OpenrouterLlmFactory(
                 model_openrouter=ls.config["model_openrouter"],
                 api_key_openrouter=ls.config["api_key_openrouter"]
                 )
+
+    elif ls.config['use_groq']:
+        llm = BasicGroqLLMFactory(
+                model_groq=ls.config['model_groq'],
+                api_key_groq=ls.config['api_key_groq'],
+                fallback_models_groq=ls.config['fallback_models_groq']
+                )
     else:
         ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
-        raise RuntimeError("INVALID CONFIGURATION RECIEVED. One of use parameters must be true !")
+        raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
+
+    prompt = 
 
 

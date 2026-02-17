@@ -21,8 +21,6 @@ def grep(pattern: str, lines: Union[str, List[str]], ignore_case: bool = False) 
         if isinstance(lines, str):
             lines = lines.splitlines()
 
-        pattern = html.unescape(pattern)
-        
         flags = re.IGNORECASE if ignore_case else 0
         regex = re.compile(re.escape(pattern), flags)
         

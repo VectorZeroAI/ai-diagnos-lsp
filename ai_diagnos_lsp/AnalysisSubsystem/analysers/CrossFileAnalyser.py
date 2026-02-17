@@ -44,133 +44,149 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
         and raise it back up with proper info of what and where caused it
     """
     
-    
-    if ls.config["use_omniprovider"]:
-
-        llm = BasicOmniproviderLLMFactory(
-                model_openrouter=ls.config["model_openrouter"],
-                api_key_openrouter=ls.config["api_key_openrouter"],
-                api_key_gemini=ls.config["api_key_gemini"],
-                model_gemini=ls.config["model_gemini"],
-                fallback_models_gemini=ls.config.get("fallback_models_gemini"),
-                api_key_groq=ls.config["api_key_groq"],
-                model_groq=ls.config["model_groq"],
-                fallback_models_groq=ls.config.get("fallback_models_groq")
-                )
-
-    elif ls.config["use_gemini"]:
-
-        llm = BasicGeminiLlmFactory(
-                api_key_gemini=ls.config["api_key_gemini"],
-                model_gemini=ls.config["model_gemini"],
-                fallback_gemini_models=ls.config.get("fallback_models_gemini")
-                )
-
-    elif ls.config["use_openrouter"]:
-        llm = OpenrouterLlmFactory(
-                model_openrouter=ls.config["model_openrouter"],
-                api_key_openrouter=ls.config["api_key_openrouter"]
-                )
-
-    elif ls.config['use_groq']:
-        llm = BasicGroqLLMFactory(
-                model_groq=ls.config['model_groq'],
-                api_key_groq=ls.config['api_key_groq'],
-                fallback_models_groq=ls.config['fallback_models_groq']
-                )
-    else:
-        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
-        raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
-
-    prompt = CrossFileAnalysisPromptFactory()
-
-    output_parser = GeneralDiagnosticsOutputParserFactory()
-
-    chain = prompt | llm | output_parser
-
-
-
-    langchain_completed_event = threading.Event()
-    langchain_timed_out = threading.Event()
-    langchain_failed = threading.Event()
-
-    tmp = None
-
-    def LangchainInvokingThread(document: TextDocument | Path):
-        try:
-            nonlocal tmp
-            if type(document) is TextDocument:
-                tmp = chain.invoke({
-                    "file_content": document.source
-                    })
-            elif type(document) is Path:
-                tmp = chain.invoke({
-                    "file_content": document.read_text()
-                    })
-
-            langchain_completed_event.set()
-        except Exception as e:
-            ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Langchain invoking thread errored out with the following error : {e}"))
-            langchain_completed_event.set()
-            langchain_failed.set()
-
-    threading.Thread(target=LangchainInvokingThread, args=(file,), daemon=True).start()
-
-    if os.getenv("AI_DIAGNOS_LOG") is not None:
-        logging.info("starting the chain")
-        if type(file) is TextDocument:
-            logging.info(f"chain started with input file as {file.source}")
-
-    def LangchainStillRunningPingerThread(ls: AIDiagnosLSP, show_progress_every_ms: int):
-        if os.getenv("AI_DIAGNOS_LOG") is not None:
-            logging.info("Langchain Pinger thread started")
-
-        counter = 1
-
-        while not (langchain_completed_event.is_set() or langchain_timed_out.is_set()):
-            ls.window_show_message(types.ShowMessageParams(types.MessageType(3), f"Langchain still running [{counter}]"))
-            counter = counter + 1
-            time.sleep(show_progress_every_ms / 1000)
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
-                logging.info("Langchain is still running")
-
-        if os.getenv("AI_DIAGNOS_LOG") is not None:
-            logging.info("Langchain Pinger thread exited")
-            
-    if ls.config['show_progress']:
-        threading.Thread(target=LangchainStillRunningPingerThread, args=(ls, ls.config['show_progress_every_ms']), daemon=True).start()
-
-    
-    timeout = ls.config['timeout']
-
-    if timeout > threading.TIMEOUT_MAX:
-        timeout = threading.TIMEOUT_MAX
-        
-    if langchain_completed_event.wait(timeout):
-        pass
-    else:
-        ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Langchain timed out"))
-        return
-
-    if langchain_failed.is_set():
-        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "Langchain FAILED"))
-        return
-
-    
     try:
-        ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
-                                                                document_uri=file.uri,
-                                                                analysis_type="Basic"
-                                                            )
-        ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.uri)
+        try:
+            if ls.config["use_omniprovider"]:
 
-    except Exception as e:
+                llm = BasicOmniproviderLLMFactory(
+                        model_openrouter=ls.config["model_openrouter"],
+                        api_key_openrouter=ls.config["api_key_openrouter"],
+                        api_key_gemini=ls.config["api_key_gemini"],
+                        model_gemini=ls.config["model_gemini"],
+                        fallback_models_gemini=ls.config.get("fallback_models_gemini"),
+                        api_key_groq=ls.config["api_key_groq"],
+                        model_groq=ls.config["model_groq"],
+                        fallback_models_groq=ls.config.get("fallback_models_groq")
+                        )
+
+            elif ls.config["use_gemini"]:
+
+                llm = BasicGeminiLlmFactory(
+                        api_key_gemini=ls.config["api_key_gemini"],
+                        model_gemini=ls.config["model_gemini"],
+                        fallback_gemini_models=ls.config.get("fallback_models_gemini")
+                        )
+
+            elif ls.config["use_openrouter"]:
+                llm = OpenrouterLlmFactory(
+                        model_openrouter=ls.config["model_openrouter"],
+                        api_key_openrouter=ls.config["api_key_openrouter"]
+                        )
+
+            elif ls.config['use_groq']:
+                llm = BasicGroqLLMFactory(
+                        model_groq=ls.config['model_groq'],
+                        api_key_groq=ls.config['api_key_groq'],
+                        fallback_models_groq=ls.config['fallback_models_groq']
+                        )
+            else:
+                ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
+                raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
+
+        except KeyError as e:
+            raise RuntimeError(f"lines 49-86, Cross file analyser thread, Key error {e}") from e
+
+        prompt = CrossFileAnalysisPromptFactory()
+
+        output_parser = GeneralDiagnosticsOutputParserFactory()
+
+        chain = prompt | llm | output_parser
+
+
+
+        langchain_completed_event = threading.Event()
+        langchain_timed_out = threading.Event()
+        langchain_failed = threading.Event()
+
+        tmp = None
+
+        def LangchainInvokingThread(document: TextDocument | Path):
+            try:
+                nonlocal tmp
+                if type(document) is TextDocument:
+                    tmp = chain.invoke({ # pyright: ignore
+                        "file_content": document.source
+                        })
+                elif type(document) is Path:
+                    tmp = chain.invoke({ # # pyright: ignore
+                        "file_content": document.read_text()
+                        })
+
+                langchain_completed_event.set()
+            except Exception as e:
+                ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Langchain invoking thread errored out with the following error : {e}"))
+                langchain_completed_event.set()
+                langchain_failed.set()
+
+        threading.Thread(target=LangchainInvokingThread, args=(file,), daemon=True).start()
+
         if os.getenv("AI_DIAGNOS_LOG") is not None:
-            logging.error("Couldnt register diagnostics into Diagnostics handling subsystem")
-        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt register diagnostics due to the following reason: {e}"))
-        return
-    else:
-        if os.getenv("AI_DIAGNOS_LOG") is not None:
-            logging.info("sucsessfully registered the diagnostics into the Diagnostics handling subsystem")
-        return
+            logging.info("starting the chain")
+            if type(file) is TextDocument:
+                logging.info(f"chain started with input file as {file.source}")
+
+        def LangchainStillRunningPingerThread(ls: AIDiagnosLSP, show_progress_every_ms: int):
+            if os.getenv("AI_DIAGNOS_LOG") is not None:
+                logging.info("Langchain Pinger thread started")
+
+            counter = 1
+
+            while not (langchain_completed_event.is_set() or langchain_timed_out.is_set()):
+                ls.window_show_message(types.ShowMessageParams(types.MessageType(3), f"Langchain still running [{counter}]"))
+                counter = counter + 1
+                time.sleep(show_progress_every_ms / 1000)
+                if os.getenv("AI_DIAGNOS_LOG") is not None:
+                    logging.info("Langchain is still running")
+
+            if os.getenv("AI_DIAGNOS_LOG") is not None:
+                logging.info("Langchain Pinger thread exited")
+                
+        try:
+            if ls.config['show_progress']:
+                threading.Thread(target=LangchainStillRunningPingerThread, args=(ls, ls.config['show_progress_every_ms']), daemon=True).start()
+        except KeyError as e:
+            raise RuntimeError(f"Lines 145-146, Cross file analyser thread, Key error {e}") from e
+
+        try:
+            timeout = ls.config['timeout']
+        except KeyError as e:
+            raise RuntimeError(f"Line 151, Cross file analyser thread, key error {e}") from e
+
+        if timeout > threading.TIMEOUT_MAX:
+            timeout = threading.TIMEOUT_MAX
+            
+        if langchain_completed_event.wait(timeout):
+            pass
+        else:
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Langchain timed out"))
+            return
+
+        if langchain_failed.is_set():
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "Langchain FAILED"))
+            return
+
+        
+        try:
+            ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                    document_uri=file.uri,
+                                                                    analysis_type="Basic"
+                                                                )
+            ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.uri)
+
+        except Exception as e:
+            if os.getenv("AI_DIAGNOS_LOG") is not None:
+                logging.error("Couldnt register diagnostics into Diagnostics handling subsystem")
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt register diagnostics due to the following reason: {e}"))
+            return
+        else:
+            if os.getenv("AI_DIAGNOS_LOG") is not None:
+                logging.info("sucsessfully registered the diagnostics into the Diagnostics handling subsystem")
+            return
+    except (KeyError, RuntimeError, Exception) as e:
+        if isinstance(e, KeyError):
+            raise RuntimeError(f"Unexpected key error in Cross file analyser thread. {e}") from e
+        elif isinstance(e, RuntimeError):
+            raise RuntimeError(f"possibly expected runtime-error {e}") from e
+        else:
+            raise RuntimeError(f"Unexpectec arbitrary exception occured in Cross file analyser thread. {e}") from e
 

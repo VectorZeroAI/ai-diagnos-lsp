@@ -3,7 +3,7 @@
 The cross file analysis worker thread
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import threading
 from pathlib import Path
@@ -23,13 +23,20 @@ from .chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
 from .chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
 from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromptFactory
 
-from utils.parser import get_cross_file_context
+from ai_diagnos_lsp.utils.parser import get_cross_file_context
 
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
-def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
+
+class CrossFileAnalysisConfig(TypedDict):
+    scope: list[str]
+    max_analysis_depth: int | None
+    max_string_size_char: int | None
+
+
+def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
     """
     The worker thread
 
@@ -83,6 +90,8 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
                 ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
                 raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
 
+            config = ls.config['CrossFileAnalysis']
+
         except KeyError as e:
             raise RuntimeError(f"lines 49-86, Cross file analyser thread, Key error {e}") from e
 
@@ -91,6 +100,7 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
         output_parser = GeneralDiagnosticsOutputParserFactory()
 
         chain = prompt | llm | output_parser
+
 
 
 
@@ -103,13 +113,15 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
         def LangchainInvokingThread(document: TextDocument | Path):
             try:
                 nonlocal tmp
-                if type(document) is TextDocument:
-                    tmp = chain.invoke({ # pyright: ignore
-                        "file_content": document.source
+                if isinstance(document, TextDocument):
+                    tmp = chain.invoke({
+                        "file_content": document.source,
+                        "context": get_cross_file_context(document, scope=config['scope'], max_string_size_char=config['max_string_size_char'])
                         })
-                elif type(document) is Path:
-                    tmp = chain.invoke({ # # pyright: ignore
-                        "file_content": document.read_text()
+                else:
+                    tmp = chain.invoke({
+                        "file_content": document.read_text(),
+                        "context": get_cross_file_context(document, scope=config['scope'], max_string_size_char=config['max_string_size_char'])
                         })
 
                 langchain_completed_event.set()
@@ -121,9 +133,14 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
         threading.Thread(target=LangchainInvokingThread, args=(file,), daemon=True).start()
 
         if os.getenv("AI_DIAGNOS_LOG") is not None:
-            logging.info("starting the chain")
+            logging.info("starting the cross file analysis chain")
             if type(file) is TextDocument:
-                logging.info(f"chain started with input file as {file.source}")
+                logging.info(f"cross file chain started with input file as {file.source}")
+                logging.info("cross file chain started with cross file content.")
+            else:
+                logging.info(f"cross file chain started with input file as {file.read_text()}")
+                logging.info("cross file chain started with cross file content.")
+
 
         def LangchainStillRunningPingerThread(ls: AIDiagnosLSP, show_progress_every_ms: int):
             if os.getenv("AI_DIAGNOS_LOG") is not None:
@@ -167,11 +184,19 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
 
         
         try:
-            ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
-                                                                    document_uri=file.uri,
-                                                                    analysis_type="Basic"
-                                                                )
-            ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.uri)
+            if isinstance(file, TextDocument):
+                ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                        document_uri=file.uri,
+                                                                        analysis_type='CrossFile'
+                                                                    )
+                ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.uri)
+            else:
+                ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                        document_uri=file.as_uri(),
+                                                                        analysis_type='CrossFile'
+                                                                    )
+                ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.as_uri())
+
 
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:

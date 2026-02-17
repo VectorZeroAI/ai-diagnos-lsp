@@ -9,6 +9,7 @@ import threading
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsHandlingSubsystemFactory
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemClassFactory
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemConfig
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalysisConfig
 
 class config(TypedDict):
     timeout: int | float
@@ -36,6 +37,8 @@ class config(TypedDict):
     fallback_models_groq: List[str]
 
     AnalysisSubsystem: AnalysisSubsystemConfig
+
+    CrossFileAnalysis: CrossFileAnalysisConfig
 
 class AIDiagnosLSP(LanguageServer):
     """

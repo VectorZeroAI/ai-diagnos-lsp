@@ -90,10 +90,10 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
     
 
 def get_cross_file_context(file: TextDocument | Path,
-                              scope: list[str],
-                              analysis_max_depth: int | None = None,
-                              max_string_size_char: int | None = None
-                              ) -> str | None:
+                          scope: list[str],
+                          analysis_max_depth: int | None = None,
+                          max_string_size_char: int | None = None
+                          ) -> str | None:
     """ 
     This function recursivly resolves imports inside for ether analysis_max_depth or until the end. 
 
@@ -114,9 +114,18 @@ def get_cross_file_context(file: TextDocument | Path,
 
     visited_files: set[Path] = set()
 
-    unified_list_of_all_the_imports: list[Path] = []
-    
+    unified_list_of_all_the_imports: set[Path] = set()
+
     prev_iteration_result: list[Path] = parse_file(file, scope)
+
+    if isinstance(file, TextDocument):
+        visited_files.add(Path(file.path))
+    else:
+        visited_files.add(file)
+
+    for i in prev_iteration_result:
+        unified_list_of_all_the_imports.add(i)
+
     intermediate_iteration_results: list[Path] = []
 
     if analysis_max_depth is not None:
@@ -135,7 +144,7 @@ def get_cross_file_context(file: TextDocument | Path,
 
                     for j in iteration_result:
 
-                        unified_list_of_all_the_imports.append(j)
+                        unified_list_of_all_the_imports.add(j)
                         intermediate_iteration_results.append(j)
                             
             prev_iteration_result = intermediate_iteration_results
@@ -158,7 +167,7 @@ def get_cross_file_context(file: TextDocument | Path,
 
                     for i in iteration_result:
 
-                        unified_list_of_all_the_imports.append(i)
+                        unified_list_of_all_the_imports.add(i)
                         intermediate_iteration_results.append(i)
                             
             if len(intermediate_iteration_results) > 0:

@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 
 from pygls.workspace import TextDocument
 
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalyserWorkerThread
+
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
@@ -116,7 +118,7 @@ class AnalysisSubsystem:
                 raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
 
             for i in self.last_analysed_at:
-                uris = self.last_analysed_at[i].values()
+                uris = self.last_analysed_at[i]
                 if uri not in uris:
                     self.last_analysed_at[i][uri] = 0
 
@@ -132,7 +134,13 @@ class AnalysisSubsystem:
 
 
                 if "CrossFile" in self.ls.config["AnalysisSubsystem"][event]:
-                    raise NotImplementedError("Cross file diagnostics not yet implemented")
+                    if time.time() - self.last_analysed_at["CrossFile"][uri] > self.ls.config["debounce_ms"] / 1000:
+                        self.submited_analyses["CrossFile"][uri] = self.executor.submit(CrossFileAnalyserWorkerThread, self.ls, doc)
+                        self.last_analysed_at["CrossFile"][uri] = time.time()
+                    else:
+                        # TODO : Implement a configuration option for "at debounce do".
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+
             except KeyError as e:
                 if log:
                     logging.error(f"Encountered a key error inside the config. {e}")

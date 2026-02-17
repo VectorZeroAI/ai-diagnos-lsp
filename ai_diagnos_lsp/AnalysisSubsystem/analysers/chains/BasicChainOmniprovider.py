@@ -2,11 +2,9 @@
 
 from typing import Any, Sequence
 
-from langchain_core.runnables import RunnableSerializable
+from langchain_core.runnables import RunnableSerializable, RunnableWithFallbacks
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
+from .LLM.BasicOmniproviderLLM import BasicOmniproviderLLMFactory
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicAnalysisPrompt import BasicAnalysisPromptFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
@@ -30,23 +28,19 @@ def BasicChainOmniproviderFactory(api_key_openrouter: str,
 
     # TODO : ADD logging back in
 
-    llm = OpenrouterLlmFactory(model_openrouter, api_key_openrouter)
-    fallbacks = []
-    if fallback_models_gemini is not None:
-        fallbacks.append(BasicGeminiLlmFactory(model_gemini, api_key_gemini, fallback_models_gemini))
-    else:
-        fallbacks.append(BasicGeminiLlmFactory(model_gemini, api_key_gemini))
-
-    if fallback_models_groq is not None:
-        fallbacks.append(BasicGroqLLMFactory(model_groq, api_key_groq, fallback_models_groq))
-    else:
-        fallbacks.append(BasicGroqLLMFactory(model_groq, api_key_groq))
-
-    llm = llm.with_fallbacks(fallbacks)
-
+    llm = BasicOmniproviderLLMFactory(
+            model_openrouter=model_openrouter,
+            model_groq=model_groq,
+            model_gemini=model_gemini,
+            api_key_gemini=api_key_gemini,
+            api_key_groq=api_key_groq,
+            api_key_openrouter=api_key_openrouter,
+            fallback_models_gemini=fallback_models_gemini,
+            fallback_models_groq=fallback_models_groq
+            )
 
     prompt = BasicAnalysisPromptFactory()
     output_parser = GeneralDiagnosticsOutputParserFactory()
 
-    basic_chain_omniprovider = prompt | llm | output_parser
+    basic_chain_omniprovider: RunnableWithFallbacks[Any, Any] = prompt | llm | output_parser
     return basic_chain_omniprovider

@@ -171,7 +171,7 @@ class DiagnosticsHandlingSubsystemClass:
             for i in diagnostics_per_file.items():
                 document = Path(unquote(urlparse(i[0]).path)).read_text()
                 converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(self.ls, i[1], document)               
-                self.ls.diagnostics[i[0]] = converted_to_lsp_format
+                self.ls.diagnostics[i[0]] = (None, converted_to_lsp_format)
 
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:

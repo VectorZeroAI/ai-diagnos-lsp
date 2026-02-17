@@ -17,7 +17,12 @@ def path_to_dotted(path: Path) -> str:
     """Convert a file path to a dotted module name."""
     path = path.resolve()
     root = find_project_root(path)
-    return ".".join(path.relative_to(root).with_suffix("").parts)
+
+    if (root / 'src').exists():   
+        result = ".".join(path.relative_to((root / 'src')).with_suffix("").parts)
+    else:
+        result = ".".join(path.relative_to(root).with_suffix("").parts)
+    return result
 
 def parse_source(source: str) -> tuple[list[str], list[dict[Literal["name", "level", "module"], Any]]]:
     """ Parse python source code and extract import statements from it """
@@ -67,11 +72,11 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
         if i['level'] > 0:
             # relative import
             dots = '.' * i['level']
-            absolute_import_statement = util.resolve_name(f"{dots}{i.get('module') if not None else ""}.{i['name']}",
+            absolute_import_statement = util.resolve_name(f"{dots}{i.get('module') + '.' if i.get('module') is not None else ""}{i['name']}", # pyright: ignore
                                                           f"{path_to_dotted(path_of_the_analysed_file)}"
                                                           )
         else:
-            absolute_import_statement = f"{i['module']}.{i['name']}"
+            absolute_import_statement = f"{i.get('module') + '.' if i.get('module') is not None else ''}{i['name']}" # pyright: ignore
 
         spec = util.find_spec(absolute_import_statement)
         if spec and spec.origin:
@@ -107,28 +112,34 @@ def recursive_resolve_imports(file: TextDocument | Path,
 
     result_str: str = ""
 
+    visited_files: set[Path] = set()
+
     unified_list_of_all_the_imports: list[Path] = []
     
     prev_iteration_result: list[Path] = parse_file(file, scope)
-    intermidiate_iteration_results: list[Path] = []
+    intermediate_iteration_results: list[Path] = []
 
     if analysis_max_depth is not None:
 
         for _ in range(analysis_max_depth):
 
             for i in prev_iteration_result:
+                if i in visited_files:
+                    continue
+                else:
+                    visited_files.add(i)
 
                 iteration_result = parse_file(i, scope)
 
                 if len(iteration_result) > 0:
 
-                    for i in iteration_result:
+                    for j in iteration_result:
 
-                        unified_list_of_all_the_imports.append(i)
-                        intermidiate_iteration_results.append(i)
+                        unified_list_of_all_the_imports.append(j)
+                        intermediate_iteration_results.append(j)
                             
-            prev_iteration_result = intermidiate_iteration_results
-            intermidiate_iteration_results = []
+            prev_iteration_result = intermediate_iteration_results
+            intermediate_iteration_results = []
 
     else:
         _flag_complete = False
@@ -136,6 +147,10 @@ def recursive_resolve_imports(file: TextDocument | Path,
         while not _flag_complete:
             
             for i in prev_iteration_result:
+                if i in visited_files:
+                    continue
+                else:
+                    visited_files.add(i)
 
                 iteration_result = parse_file(i, scope)
 
@@ -144,11 +159,11 @@ def recursive_resolve_imports(file: TextDocument | Path,
                     for i in iteration_result:
 
                         unified_list_of_all_the_imports.append(i)
-                        intermidiate_iteration_results.append(i)
+                        intermediate_iteration_results.append(i)
                             
-            if len(intermidiate_iteration_results) > 0:
-                prev_iteration_result = intermidiate_iteration_results
-                intermidiate_iteration_results = []
+            if len(intermediate_iteration_results) > 0:
+                prev_iteration_result = intermediate_iteration_results
+                intermediate_iteration_results = []
             else:
                 _flag_complete = True
                         

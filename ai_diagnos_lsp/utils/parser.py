@@ -73,9 +73,9 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
                     result.append(resulting_file_path)
                 else:
                     continue
-        except AttributeError as e:
+        except Exception as e:
             if LOG: 
-                logging.info(f"attribute error ecountered by the parser (upper) : {e}")
+                logging.info(f"error ecountered by the parser (upper) : {e}")
 
     for i in imports_lists_tuple[1]:
         try:
@@ -95,7 +95,7 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
                     result.append(resulting_file_path)
                 else:
                     continue
-        except AttributeError as e:
+        except Exception as e:
             if LOG: 
                 logging.info(f"attribute error encoutered by parser: {e}")
 
@@ -191,8 +191,12 @@ def get_cross_file_context(file: TextDocument | Path,
                         
     
     for i in unified_list_of_all_the_imports:
-        result_str = result_str + f"@{i.resolve().absolute().as_uri()}: \n"
-        result_str = result_str + f"{i.read_text()} \n\n"
+        try:
+            result_str = result_str + f"@{i.resolve().absolute().as_uri()}: \n"
+            result_str = result_str + f"{i.read_text()} \n\n"
+        except Exception as e:
+            if LOG:
+                logging.error(f"Expetion in parser during final results reading {e}")
 
     if max_string_size_char is not None:
         if len(result_str) > max_string_size_char:

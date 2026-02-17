@@ -117,19 +117,26 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         def LangchainInvokingThread(document: TextDocument | Path):
             try:
-                nonlocal tmp
-                if os.getenv("AI_DIAGNOS_LOG") is not None:
-                    logging.info("Langchain invoking thread inside cross file analyser started")
-                if isinstance(document, TextDocument):
-                    tmp = chain.invoke({
-                        "file_content": document.source,
-                        "context": get_cross_file_context(document, scope=config['scope'], max_string_size_char=config['max_string_size_char'])
-                        })
-                else:
-                    tmp = chain.invoke({
-                        "file_content": document.read_text(),
-                        "context": get_cross_file_context(document, scope=config['scope'], max_string_size_char=config['max_string_size_char'])
-                        })
+                try:
+                    nonlocal tmp
+                    if os.getenv("AI_DIAGNOS_LOG") is not None:
+                        logging.info("Langchain invoking thread inside cross file analyser started")
+                    if isinstance(document, TextDocument):
+                        tmp = chain.invoke({
+                            "file_content": document.source,
+                            "context": get_cross_file_context(document, scope=config['scope'],
+                                                              analysis_max_depth=config.get('max_analysis_depth'),
+                                                              max_string_size_char=config.get('max_string_size_char')
+                                                              )
+                            })
+                    else:
+                        tmp = chain.invoke({
+                            "file_content": document.read_text(),
+                            "context": get_cross_file_context(document, scope=config['scope'], max_string_size_char=config['max_string_size_char'])
+                            })
+                except KeyError as e:
+                    raise RuntimeError(f"Key error in Langchain Invoking thread, inside Cross file analyser. On lines 110 - 130 . {e}"
+                                       ) from e
 
                 langchain_completed_event.set()
             except Exception as e:

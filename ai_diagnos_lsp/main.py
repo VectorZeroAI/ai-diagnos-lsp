@@ -13,7 +13,7 @@ def main():
     """
     The server setup function. 
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.9.4 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.10.0 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
@@ -41,7 +41,7 @@ def main():
                         change=types.TextDocumentSyncKind.Full
                         ),
                     diagnostic_provider=types.DiagnosticOptions(
-                        inter_file_dependencies=False, # TODO: DONT FORGET TO SET TO TRUE WHEN IMPLEMENTED
+                        inter_file_dependencies=True,
                         workspace_diagnostics=False, # TODO: Set to true when implemented
                         identifier="AI-diagnos-lsp"
                         )
@@ -94,7 +94,7 @@ def main():
             types.TEXT_DOCUMENT_DIAGNOSTIC,
             types.DiagnosticOptions(
                 identifier="pull-diagnostics",
-                inter_file_dependencies=False,
+                inter_file_dependencies=True,
                 workspace_diagnostics=True,
                 ),
             )

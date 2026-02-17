@@ -1,10 +1,15 @@
+#!/usr/bin/env python
+
 from pathlib import Path
 import ast
 from typing import Literal, Any
 from pygls.workspace import TextDocument
 from importlib import util
+import os
+import logging
 
 ROOT_MARKERS = {"setup.py", "pyproject.toml", "setup.cfg"}
+LOG = True if os.getenv('AI_DIAGNOS_LOG') is not None else False
 
 def find_project_root(path: Path) -> Path:
     """Walk up directories until a project root marker is found."""
@@ -60,31 +65,39 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
     imports_lists_tuple = parse_source(source)
 
     for i in imports_lists_tuple[0]:
-        spec = util.find_spec(i)
-        if spec and spec.origin:
-            resulting_file_path = Path(spec.origin)
-            if any(Path(s) in resulting_file_path.parents for s in scope):
-                result.append(resulting_file_path)
-            else:
-                continue
+        try:
+            spec = util.find_spec(i)
+            if spec and spec.origin:
+                resulting_file_path = Path(spec.origin)
+                if any(Path(s) in resulting_file_path.parents for s in scope):
+                    result.append(resulting_file_path)
+                else:
+                    continue
+        except AttributeError as e:
+            if LOG: 
+                logging.info(f"attribute error ecountered by the parser (upper) : {e}")
 
     for i in imports_lists_tuple[1]:
-        if i['level'] > 0:
-            # relative import
-            dots = '.' * i['level']
-            absolute_import_statement = util.resolve_name(f"{dots}{i.get('module') + '.' if i.get('module') is not None else ""}{i['name']}", # pyright: ignore
-                                                          f"{path_to_dotted(path_of_the_analysed_file)}"
-                                                          )
-        else:
-            absolute_import_statement = f"{i.get('module') + '.' if i.get('module') is not None else ''}{i['name']}" # pyright: ignore
-
-        spec = util.find_spec(absolute_import_statement)
-        if spec and spec.origin:
-            resulting_file_path = Path(spec.origin)
-            if any(Path(s) in resulting_file_path.parents for s in scope):
-                result.append(resulting_file_path)
+        try:
+            if i['level'] > 0:
+                # relative import
+                dots = '.' * i['level']
+                absolute_import_statement = util.resolve_name(f"{dots}{i.get('module') + '.' if i.get('module') is not None else ""}{i['name']}", # pyright: ignore
+                                                              f"{path_to_dotted(path_of_the_analysed_file)}"
+                                                              )
             else:
-                continue
+                absolute_import_statement = f"{i.get('module') + '.' if i.get('module') is not None else ''}{i['name']}" # pyright: ignore
+
+            spec = util.find_spec(absolute_import_statement)
+            if spec and spec.origin:
+                resulting_file_path = Path(spec.origin)
+                if any(Path(s) in resulting_file_path.parents for s in scope):
+                    result.append(resulting_file_path)
+                else:
+                    continue
+        except AttributeError as e:
+            if LOG: 
+                logging.info(f"attribute error encoutered by parser: {e}")
 
     return result
     

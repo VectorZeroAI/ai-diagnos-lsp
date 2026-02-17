@@ -4,7 +4,7 @@ from typing import Any, Sequence
 from langchain_core.runnables import RunnableSerializable
 
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import GeminiLlmFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicAnalysisPrompt import BasicAnalysisPromptFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 
@@ -19,9 +19,9 @@ def BasicChainGeminiFactory(model_gemini: str, api_key_gemini: str, fallback_mod
     api_key_gemini = api_key_gemini
 
     if fallback_models_gemini is not None:
-        llm = GeminiLlmFactory(model_gemini, api_key_gemini, fallback_models_gemini)
+        llm = BasicGeminiLlmFactory(model_gemini, api_key_gemini, fallback_models_gemini)
     else:
-        llm = GeminiLlmFactory(model_gemini, api_key_gemini)
+        llm = BasicGeminiLlmFactory(model_gemini, api_key_gemini)
 
     general_analysis_prompt = BasicAnalysisPromptFactory()
 

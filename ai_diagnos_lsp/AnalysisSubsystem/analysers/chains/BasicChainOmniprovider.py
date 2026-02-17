@@ -5,7 +5,7 @@ from typing import Any, Sequence
 from langchain_core.runnables import RunnableSerializable
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import GeminiLlmFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicAnalysisPrompt import BasicAnalysisPromptFactory
@@ -33,9 +33,9 @@ def BasicChainOmniproviderFactory(api_key_openrouter: str,
     llm = OpenrouterLlmFactory(model_openrouter, api_key_openrouter)
     fallbacks = []
     if fallback_models_gemini is not None:
-        fallbacks.append(GeminiLlmFactory(model_gemini, api_key_gemini, fallback_models_gemini))
+        fallbacks.append(BasicGeminiLlmFactory(model_gemini, api_key_gemini, fallback_models_gemini))
     else:
-        fallbacks.append(GeminiLlmFactory(model_gemini, api_key_gemini))
+        fallbacks.append(BasicGeminiLlmFactory(model_gemini, api_key_gemini))
 
     if fallback_models_groq is not None:
         fallbacks.append(BasicGroqLLMFactory(model_groq, api_key_groq, fallback_models_groq))

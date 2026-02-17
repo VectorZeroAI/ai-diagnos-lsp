@@ -6,7 +6,7 @@ from pydantic import SecretStr
 import logging
 import os
 
-def GeminiLlmFactory(model_gemini: str, api_key_gemini: str,
+def BasicGeminiLlmFactory(model_gemini: str, api_key_gemini: str,
                      fallback_gemini_models: Sequence[str] | None = None
                      ) -> ChatGoogleGenerativeAI | RunnableWithFallbacks[Any, Any]:
     """

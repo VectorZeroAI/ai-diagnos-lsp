@@ -55,7 +55,7 @@ class AIDiagnosLSP(LanguageServer):
                     datefmt='%H:%M:%S'
                     )
 
-        self.diagnostics: dict[str, tuple[int | Any] | tuple[None, None]] = {}
+        self.diagnostics: dict[str, tuple[int | Any, Any] | tuple[None, None]] = {}
         self.last_diagnostic_time = {}
         self.config: config = {} # pyright: ignore
         self.diagnostics_lock = threading.Lock()

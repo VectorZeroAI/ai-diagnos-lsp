@@ -48,10 +48,8 @@ def BasicDiagnoseFunctionWorker(document: TextDocument | Path, ls: AIDiagnosLSP)
 
         timeout = ls.config["timeout"]
 
-        ls.window_show_message(types.ShowMessageParams(types.MessageType(3), f"The timeout recieved is the following : {timeout}"))
 
 
-        
         #  ------- The Basic Chain setup section --------
 
 

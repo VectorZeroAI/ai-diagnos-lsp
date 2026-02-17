@@ -49,7 +49,6 @@ def BasicDiagnoseFunctionWorker(document: TextDocument | Path, ls: AIDiagnosLSP)
         timeout = ls.config["timeout"]
 
 
-
         #  ------- The Basic Chain setup section --------
 
 

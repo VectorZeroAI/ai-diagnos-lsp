@@ -8,6 +8,12 @@ from typing import TYPE_CHECKING
 
 from pygls.workspace import TextDocument
 from utils.parser import get_cross_file_context
+from .chains.LLM import (
+        BasicGeminiLLM,
+        BasicGroqLLM,
+        BasicOmniproviderLLM,
+        BasicOpenrouterLLM
+)
 
 
 if TYPE_CHECKING:
@@ -31,7 +37,7 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument):
     
     if ls.config["use_omniprovider"]:
 
-        BasicChain = BasicChainOmniproviderFactory(
+        llm = BasicOmniproviderLLMFactory(
                 model_openrouter=ls.config["model_openrouter"],
                 api_key_openrouter=ls.config["api_key_openrouter"],
                 api_key_gemini=ls.config["api_key_gemini"],

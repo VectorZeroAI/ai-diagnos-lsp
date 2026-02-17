@@ -52,6 +52,9 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
     """
     
     try:
+
+        if os.getenv("AI_DIAGNOS_LOG") is not None:
+            logging.info("Cross File analyser Worker thread started")
         try:
             if ls.config["use_omniprovider"]:
 
@@ -101,7 +104,9 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         chain = prompt | llm | output_parser
 
-
+        
+        if os.getenv("AI_DIAGNOS_LOG") is not None:
+            logging.info("chain initialized")
 
 
         langchain_completed_event = threading.Event()
@@ -113,6 +118,8 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
         def LangchainInvokingThread(document: TextDocument | Path):
             try:
                 nonlocal tmp
+                if os.getenv("AI_DIAGNOS_LOG") is not None:
+                    logging.info("Langchain invoking thread inside cross file analyser started")
                 if isinstance(document, TextDocument):
                     tmp = chain.invoke({
                         "file_content": document.source,
@@ -196,22 +203,24 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
                                                                         analysis_type='CrossFile'
                                                                     )
                 ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.as_uri())
+            if os.getenv("AI_DIAGNOS_LOG") is not None:
+                logging.info("Cross file analyser : Published the diagnostics")
 
 
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:
-                logging.error("Couldnt register diagnostics into Diagnostics handling subsystem")
+                logging.error("Cross File Analyser : Couldnt register diagnostics into Diagnostics handling subsystem")
             ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt register diagnostics due to the following reason: {e}"))
             return
         else:
             if os.getenv("AI_DIAGNOS_LOG") is not None:
-                logging.info("sucsessfully registered the diagnostics into the Diagnostics handling subsystem")
+                logging.info("Cross file analyser : sucsessfully registered the diagnostics into the Diagnostics handling subsystem")
             return
     except (KeyError, RuntimeError, Exception) as e:
         if isinstance(e, KeyError):
             raise RuntimeError(f"Unexpected key error in Cross file analyser thread. {e}") from e
         elif isinstance(e, RuntimeError):
-            raise RuntimeError(f"possibly expected runtime-error {e}") from e
+            raise RuntimeError(f"Cross file analyser: possibly expected runtime-error {e}") from e
         else:
             raise RuntimeError(f"Unexpectec arbitrary exception occured in Cross file analyser thread. {e}") from e
 

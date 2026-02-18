@@ -189,6 +189,7 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
         if langchain_completed_event.wait(timeout):
             pass
         else:
+            langchain_timed_out.set()
             ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Langchain timed out"))
             return
 

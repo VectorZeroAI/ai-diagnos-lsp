@@ -326,16 +326,19 @@ def get_cross_file_context(file: TextDocument | Path,
     
     for i in unified_list_of_all_the_imports:
         try:
-            result_str = result_str + f"@{i.resolve().absolute().as_uri()}: \n"
-            result_str = result_str + f"{i.read_text()} \n\n"
+            result_str_new = result_str + f"@{i.resolve().absolute().as_uri()}: \n"
+            result_str_new = result_str + f"{i.read_text()} \n\n"
+            if max_string_size_char is not None:
+                if len(result_str_new) > max_string_size_char:
+                    return result_str
+                else:
+                    result_str = result_str_new
+            else:
+                result_str = result_str_new
         except Exception as e:
             if LOG:
                 logging.error(f"Expetion in parser during final results reading {e}")
 
-    if max_string_size_char is not None:
-        if len(result_str) > max_string_size_char:
-            return None
-            # TODO : Add some behaviour to here
         
     return result_str
 

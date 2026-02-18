@@ -8,6 +8,14 @@ def CrossFileAnalysisPromptFactory():
 
     return ChatPromptTemplate.from_messages([
         ("system", f"{CROSS_FILE_ANALYSIS_SYSTEM_PROMPT}"),
-        ("human", "\n{{file_content}}\n\n"),
-        ("human", "\n{{context}}\n\n")
+        ("human", """
+         ---- BEGIN PRIMARY FILE ----
+         {{file_content}}
+         ---- END PRIMARY FILE ----
+
+
+         ---- BEGIN REFERENSE ONLY CONTEXT ----
+         {{context}}
+         ---- END REFERENSE ONLY CONTEXT
+         """),
         ], template_format="mustache")

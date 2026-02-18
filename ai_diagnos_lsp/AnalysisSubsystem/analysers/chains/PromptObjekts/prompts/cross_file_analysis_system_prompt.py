@@ -5,7 +5,13 @@ Your primary task is to identify LOGIC ERRORS and CONSISTENCY ISSUES in the prov
 Secondary focus: syntax errors, naming issues, and other code quality problems.
 
 You are provided related files content FOR REFERENSE ONLY. 
+DO NOT report any diagnostics for code found in the related files.
+Only report diagnostics for code in the primary file.
 You are provided related files content FOR REFERENSE ONLY. 
+DO NOT report any diagnostics for code found in the related files.
+Only report diagnostics for code in the primary file.
+
+Files provided FOR REFERENSE ONLY are prefixed with their file uri in the format @file:///path/to/the/file
 
 Priority categories:
 - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions)

@@ -9,6 +9,7 @@ import os
 import logging
 
 ROOT_MARKERS = {"setup.py", "pyproject.toml", "setup.cfg"}
+
 LOG = True if os.getenv('AI_DIAGNOS_LOG') is not None else False
 
 def find_project_root(path: Path) -> Path:
@@ -50,6 +51,130 @@ def parse_source(source: str) -> tuple[list[str], list[dict[Literal["name", "lev
             continue
 
     return (imports, from_imports)
+
+
+
+def resolve_absolute_import(absolute_import_statement: str, root_project: str) -> Path | None:
+    """
+    This function resolves the absolute import statement by walking down each of its steps until a file is found. 
+    """
+    current_step = Path(root_project)
+
+    steps = absolute_import_statement.split('.')
+
+    if (current_step / steps[0]).exists():
+        pass
+    
+    else:
+        if (current_step / 'src' / steps[0]).exists():
+            current_step = current_step / 'src'
+        else:
+            return None
+
+    for step in steps:
+        current_step_try = current_step / step
+
+        if current_step_try.exists() and current_step_try.is_dir():
+            current_step = current_step_try
+            continue
+
+        if not current_step_try.exists():
+
+            if (current_step / f"{step}.py").exists():
+                 return current_step / f"{step}.py"
+
+    if current_step.is_dir():
+        current_step_try = current_step / '__init__.py'
+
+        if current_step_try.is_file():
+            return current_step_try
+
+    return None
+
+
+
+def resolve_relative_import(info: dict[Literal['name', 'level', 'module'], Any], analysed_file: str) -> Path | None:
+    """
+    Resolves relative imports by incremental path traversal
+    """
+
+    current_step = Path(analysed_file)
+
+    if not current_step.exists():
+        return None
+    
+    level: int = info['level']
+    name: str = info['name']
+    module: str | None = info['module']
+
+
+    for _ in range(level):
+        current_step = current_step.parent
+    
+
+    if module is None:
+        module_parts = []
+
+    else:
+        module_parts = module.split('.')
+    
+    for step in module_parts:
+        current_step_try = current_step / step
+
+        if current_step_try.is_dir():
+            current_step = current_step_try
+
+        elif current_step_try.is_file():
+            return current_step_try
+
+        elif not current_step_try.exists():
+            current_step_try = current_step / f"{step}.py"
+
+            if current_step_try.is_file():
+                return current_step_try
+
+            else:
+                return None 
+
+    current_step_try = current_step / name
+
+    if current_step_try.is_dir():
+        current_step_try = current_step / '__init__.py'
+
+        if current_step_try.is_file():
+            return current_step_try
+
+    elif current_step_try.is_file():
+        return current_step_try
+
+    elif not current_step_try.exists():
+        current_step_try = current_step / f"{name}.py"
+        if current_step_try.is_file():
+            return current_step_try
+        elif current_step_try.is_dir():
+            current_step_try = current_step_try / '__init__.py'
+            if current_step_try.is_file():
+                return current_step_try
+
+    return None
+
+
+def resolve_import(import_statement: str | dict[Literal['name', 'level', 'module'], Any], currently_analysed_file_path: Path) -> Path | None:
+    root = find_project_root(
+            currently_analysed_file_path.resolve().absolute()
+            ).as_posix()
+    if isinstance(import_statement, str):
+        result = resolve_absolute_import(import_statement, root)
+    else:
+        if import_statement['level'] == 0:
+            result = resolve_absolute_import(f"{import_statement['module']}.{import_statement['name']}", 
+                                            root
+                                             )
+        else:
+            result = resolve_relative_import(import_statement, currently_analysed_file_path.as_posix())
+
+    return result
+
 
 def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
     

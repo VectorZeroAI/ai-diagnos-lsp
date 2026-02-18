@@ -9,6 +9,7 @@ from typing import Literal, TypeAlias, TypedDict
 
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemConfig
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalysisConfig
+from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsSubsystemConfig
 
 LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "Logic", "Style", "Security", "Deep"]
     
@@ -36,6 +37,7 @@ class DefaultConfigType(TypedDict):
     fallback_models_groq: list[str]
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig
+    DiagnosticsSubsystem: DiagnosticsSubsystemConfig
 
 
 class user_config(DefaultConfigType):
@@ -54,9 +56,9 @@ DEFAULT_CONFIG: DefaultConfigType = {
     "use_omniprovider": True,
 
     "use_gemini": False,
-    "model_gemini": "gemini-2.5-flash-lite",
+    "model_gemini": "gemini-2.5-pro",
     "fallback_models_gemini": [
-        "gemini-2.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"
+        "gemini-2.5-flash", "gemini-3-flash-preview"
     ],
 
     "use_openrouter": False,
@@ -66,7 +68,7 @@ DEFAULT_CONFIG: DefaultConfigType = {
     "model_groq": "openai/gpt-oss-120b",
     "fallback_models_groq": [
         "openai/gpt-oss-20b", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b", "llama-3.3-70b-versatile"
-    ],
+    ], # AI diagnos lsp: This groq configuration was tested and proved to be functional. 
 
     "AnalysisSubsystem": {
         "write": [ "CrossFile", "Basic" ],
@@ -79,5 +81,12 @@ DEFAULT_CONFIG: DefaultConfigType = {
         "scope": [ "Nope. Fo put that in yourself. This is here for keyerrors to not occur. " ],
         "max_analysis_depth": None,
         "max_string_size_char": 1000000
+    },
+    "DiagnosticsSubsystem": {
+        "check_ttl_for_deletion": 360,
+        "sqlite_db_name": "diagnostics.db",
+        "check_ttl_for_invalidation": 5,
+        "ttl_until_deletion": 2592000,
+        "ttl_until_invalidation": 15
     }
 }

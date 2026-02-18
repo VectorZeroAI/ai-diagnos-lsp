@@ -201,6 +201,12 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
         except Exception as e:
             if LOG: 
                 logging.info(f"error ecountered by the parser (upper) : {e}")
+            tmp = resolve_import(i, path_of_the_analysed_file)
+            if tmp is not None:
+                result.append(tmp)
+            else:
+                if LOG:
+                    logging.info("My directory traversal based resolver failed as well. ")
 
     for i in imports_lists_tuple[1]:
         try:
@@ -223,6 +229,9 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
         except Exception as e:
             if LOG: 
                 logging.info(f"attribute error encoutered by parser: {e}")
+            tmp = resolve_import(i, path_of_the_analysed_file)
+            if tmp is not None: 
+                result.append(tmp)
 
     return result
     

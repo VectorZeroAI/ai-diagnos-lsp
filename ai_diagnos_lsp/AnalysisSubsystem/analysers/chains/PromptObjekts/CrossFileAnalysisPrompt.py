@@ -10,12 +10,12 @@ def CrossFileAnalysisPromptFactory():
         ("system", f"{CROSS_FILE_ANALYSIS_SYSTEM_PROMPT}"),
         ("human", """
          ---- BEGIN PRIMARY FILE ----
-         {{file_content}}
+         {{{file_content}}}
          ---- END PRIMARY FILE ----
 
 
-         ---- BEGIN REFERENSE ONLY CONTEXT ----
-         {{context}}
+         ---- BEGIN REFERENCE ONLY CONTEXT ----
+         {{{context}}}
          ---- END REFERENSE ONLY CONTEXT
          """),
         ], template_format="mustache")

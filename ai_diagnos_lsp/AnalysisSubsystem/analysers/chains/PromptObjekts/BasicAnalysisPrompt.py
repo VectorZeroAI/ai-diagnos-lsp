@@ -16,6 +16,6 @@ def BasicAnalysisPromptFactory() -> ChatPromptTemplate:
 
     GeneralAnalysisPrompt = ChatPromptTemplate.from_messages([
         ("system", f"{GENERAL_ANALYSIS_SYSTEM_PROMPT}"),
-        ("human", "\n{{file_content}}\n\n"),
+        ("human", "\n{{{file_content}}}\n\n"),
         ], template_format="mustache")
     return GeneralAnalysisPrompt

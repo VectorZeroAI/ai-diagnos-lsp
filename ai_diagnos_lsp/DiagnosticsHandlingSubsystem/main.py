@@ -3,7 +3,7 @@
 from __future__ import annotations
 import sqlite3
 import threading
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 import time
 import logging
 import os
@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import urlparse, unquote
 
 from lsprotocol import types
+from pydantic import BaseModel
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsPydanticObjekt
 
@@ -29,9 +30,9 @@ class DiagnosticsHandlingSubsystemClass:
     
     def __init__(self,
                  ls: AIDiagnosLSP,
-                 sqlite_db_name,
-                 ttl_seconds_until_deletion,
-                 ttl_seconds_until_invalidation
+                 sqlite_db_name: str,
+                 ttl_seconds_until_deletion: int | float,
+                 ttl_seconds_until_invalidation: int | float
                  ) -> None:
         self.conn = sqlite3.connect(sqlite_db_name, autocommit=True, check_same_thread=False)
         curr = self.conn.cursor()
@@ -73,15 +74,15 @@ class DiagnosticsHandlingSubsystemClass:
                 )
                               """, )
         
-        VIEW_CREATION_SCRIPT = """
+        view_creation_script = """
         CREATE VIEW IF NOT EXISTS all_diagnostics_view AS \n
         """
         for name in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
-            VIEW_CREATION_SCRIPT = VIEW_CREATION_SCRIPT + f"SELECT uri, '{name}' AS diagnostics_type, diagnostics, created_at FROM diagnostics_{name} \n \n"
+            view_creation_script = view_creation_script + f"SELECT uri, '{name}' AS diagnostics_type, diagnostics, created_at FROM diagnostics_{name} \n \n"
             if self.ls.SUPPORTED_DIAGNOSTIC_TYPES.index(name) != len(self.ls.SUPPORTED_DIAGNOSTIC_TYPES) - 1:
-                VIEW_CREATION_SCRIPT = VIEW_CREATION_SCRIPT + "UNION ALL \n"
+                view_creation_script = view_creation_script + "UNION ALL \n"
 
-        curr.execute(VIEW_CREATION_SCRIPT)
+        curr.execute(view_creation_script)
 
         threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
         threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
@@ -147,7 +148,7 @@ class DiagnosticsHandlingSubsystemClass:
             SELECT diagnostics, uri FROM all_diagnostics_view
                                                               """).fetchall()
             
-            diagnostics_sorted_per_file = {}
+            diagnostics_sorted_per_file: dict[str, list[str]] = {}
 
             for i in all_diagnostics_for_every_file:
                 current_uri = i[1]
@@ -162,7 +163,7 @@ class DiagnosticsHandlingSubsystemClass:
             diagnostics_per_file = {}
 
             for i in diagnostics_sorted_per_file.items():
-                pydantic_objekts_list = []
+                pydantic_objekts_list: list[BaseModel] = []
                 for j in i[1]:
                     pydantic_objekts_list.append(GeneralDiagnosticsPydanticObjekt.model_validate_json(j))
 

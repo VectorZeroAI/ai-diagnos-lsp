@@ -3,7 +3,7 @@
 from __future__ import annotations
 import sqlite3
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict, NotRequired
 import time
 import logging
 import os
@@ -20,6 +20,17 @@ if TYPE_CHECKING:
 
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPydanticToLSProtocol import GeneralDiagnosticsPydanticToLSProtocol
 
+class DiagnosticsSubsystemConfig(TypedDict):
+    """
+    All the time units are in seconds. 
+    """
+    sqlite_db_name: str
+    ttl_until_invalidation: int | float
+    ttl_until_deletion: int | float
+    check_ttl_for_deletion: int | float
+    check_ttl_for_invalidation: int | float
+
+
 class DiagnosticsHandlingSubsystemClass:
     """
     My own internal subsyste for handling many different internal types of diagnostics,
@@ -28,21 +39,28 @@ class DiagnosticsHandlingSubsystemClass:
     Will propably get its own directory once actually implemented. 
     """
     
-    def __init__(self,
-                 ls: AIDiagnosLSP,
-                 sqlite_db_name: str,
-                 ttl_seconds_until_deletion: int | float,
-                 ttl_seconds_until_invalidation: int | float
-                 ) -> None:
-        self.conn = sqlite3.connect(sqlite_db_name, autocommit=True, check_same_thread=False)
-        curr = self.conn.cursor()
+    def __init__(self, ls: AIDiagnosLSP) -> None:
+        try:
+            self.conn = sqlite3.connect(
+                    database=ls.config['DiagnosticsSubsystem']['sqlite_db_name'],
+                    autocommit=True,
+                    check_same_thread=False
+                    )
+            curr = self.conn.cursor()
+        except KeyError as e:
+            raise RuntimeError(f"lines 51 and 8 more up in Diagnostics handling subsystem, main.py, couldnt get sqlite_db_name from the config. Error: {e}") from e
 
 
         self.ls = ls
-        self.ttl_seconds_until_deletion = ttl_seconds_until_deletion
-        self.db_lock = threading.Lock()
-        self.ttl_seconds_until_invalidation = ttl_seconds_until_invalidation
+        try:
+            self.ttl_seconds_until_deletion = ls.config['DiagnosticsSubsystem']['ttl_until_deletion']
+            self.ttl_seconds_until_invalidation = ls.config['DiagnosticsSubsystem']['ttl_until_invalidation']
+            self.check_ttl_for_deletion = ls.config['DiagnosticsSubsystem']['check_ttl_for_deletion']
+            self.check_ttl_for_invalidation = ls.config['DiagnosticsSubsystem']['check_ttl_for_invalidation']
+        except KeyError as e:
+            raise RuntimeError(f"lines 55-61. Diagnostics Subsystem, main.py. Key error: {e}") from e
 
+        self.db_lock = threading.Lock()
         
 
         # SQL DB initialisation
@@ -132,7 +150,7 @@ class DiagnosticsHandlingSubsystemClass:
         else:
             self.ls.workspace_diagnostic_refresh(None)
             if os.getenv("AI_DIAGNOS_LOG") is not None:
-                logging.info("sucsessfully registered new diagnostics")
+                logging.info("successfully registered new diagnostics")
             return True
         finally:
             curr.close()
@@ -172,7 +190,9 @@ class DiagnosticsHandlingSubsystemClass:
             for i in diagnostics_per_file.items():
                 document = Path(unquote(urlparse(i[0]).path)).read_text()
                 converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(self.ls, i[1], document)               
-                self.ls.diagnostics[i[0]] = (None, converted_to_lsp_format)
+                self.ls.diagnostics[i[0]] = (self.ls.workspace.get_text_document(i[0]).version, 
+                                             converted_to_lsp_format
+                                             )
 
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:
@@ -264,7 +284,7 @@ class DiagnosticsHandlingSubsystemClass:
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.error(f"TTLBasedDeletionThread encoutered the following problem : {e}")
             finally:
-                time.sleep(360)
+                time.sleep(self.check_ttl_for_deletion)
 
     def TTLBasedDiagnosticsInvalidationThread(self):
         """
@@ -306,18 +326,10 @@ class DiagnosticsHandlingSubsystemClass:
                         if os.getenv("AI_DIAGNOS_LOG") is not None:
                             logging.info(f"Did not delete, because last_changed_at = {file_change_time[0]}, and diagnostics were created at {i[1]}, with self.ttl_seconds_until_invalidation being {self.ttl_seconds_until_invalidation}")
                         
-                time.sleep(2)
+                time.sleep(self.check_ttl_for_invalidation)
             except Exception as e:
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.error(f"TTLBasedDiagnosticsInvalidationThread encoutered the follwoign error: {e}")
 
-def DiagnosticsHandlingSubsystemFactory(ls: AIDiagnosLSP,
-                                        sqlite_db_name: str = "diagnostics.db",
-                                        ttl_seconds_until_deletion: int = 2592000,
-                                        ttl_seconds_until_invalidation: int = 15
-                                        ) -> DiagnosticsHandlingSubsystemClass:
-    return DiagnosticsHandlingSubsystemClass(ls=ls, 
-                                             sqlite_db_name=sqlite_db_name,
-                                             ttl_seconds_until_deletion=ttl_seconds_until_deletion,
-                                             ttl_seconds_until_invalidation= ttl_seconds_until_invalidation
-                                             )
+def DiagnosticsHandlingSubsystemFactory(ls: AIDiagnosLSP,) -> DiagnosticsHandlingSubsystemClass:
+    return DiagnosticsHandlingSubsystemClass(ls=ls)

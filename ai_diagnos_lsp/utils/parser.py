@@ -327,7 +327,7 @@ def get_cross_file_context(file: TextDocument | Path,
     for i in unified_list_of_all_the_imports:
         try:
             result_str_new = result_str + f"@{i.resolve().absolute().as_uri()}: \n"
-            result_str_new = result_str + f"{i.read_text()} \n\n"
+            result_str_new = result_str_new + f"{i.read_text()} \n\n"
             if max_string_size_char is not None:
                 if len(result_str_new) > max_string_size_char:
                     return result_str
@@ -339,6 +339,5 @@ def get_cross_file_context(file: TextDocument | Path,
             if LOG:
                 logging.error(f"Expetion in parser during final results reading {e}")
 
-        
     return result_str
 

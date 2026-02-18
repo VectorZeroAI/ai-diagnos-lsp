@@ -29,7 +29,7 @@ from ai_diagnos_lsp.utils.parser import get_cross_file_context
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
-if LOG:
+if os.getenv("AI_DIAGNOS_LOG") is not None:
     LOG = True
 else:
     LOG = False # # pyright: ignore

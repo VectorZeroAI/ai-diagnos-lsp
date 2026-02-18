@@ -23,11 +23,14 @@ else:
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
 
+if TYPE_CHECKING:
+    from ai_diagnos_lsp.default_config import LiteralSupportedAnalysisTypes
+
 class AnalysisSubsystemConfig(TypedDict):
-    write: list[str]
-    open: list[str]
-    change: list[str]
-    command: list[str]
+    write: list[LiteralSupportedAnalysisTypes]
+    open: list[LiteralSupportedAnalysisTypes]
+    change: list[LiteralSupportedAnalysisTypes]
+    command: list[LiteralSupportedAnalysisTypes]
     max_threads: int
 
 class AnalysisSubsystem:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import List, TypedDict, Any
+from typing import Any
 from pygls.lsp.server import LanguageServer
 import os
 import logging
@@ -8,37 +8,6 @@ import threading
 
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsHandlingSubsystemFactory
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemClassFactory
-from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemConfig
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalysisConfig
-
-class config(TypedDict):
-    timeout: int | float
-    debounce_ms: int | float
-    max_file_size: int
-    show_progress: bool
-    show_progress_every_ms: int | float
-    ai_diagnostics_symbol: str
-
-    use_omniprovider: bool
-
-    api_key_gemini: str
-    api_key_openrouter: str
-    api_key_groq: str
-
-    use_gemini: bool
-    model_gemini: str
-    fallback_models_gemini: List[str]
-
-    use_openrouter: bool
-    model_openrouter: str
-
-    use_groq: bool
-    model_groq: str
-    fallback_models_groq: List[str]
-
-    AnalysisSubsystem: AnalysisSubsystemConfig
-
-    CrossFileAnalysis: CrossFileAnalysisConfig
 
 class AIDiagnosLSP(LanguageServer):
     """
@@ -47,6 +16,7 @@ class AIDiagnosLSP(LanguageServer):
     """
 
     SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "Logic", "Style", "Security", "Deep"]
+    # NOTE : DONT FORGET TO UPDATE THE DEFAULT CONFIG WITH THE NEW DEFINITION AFTER EACH CHANGE
 
     def __init__(self, *args, **kwargs): # pyright: ignore
         super().__init__(*args, **kwargs) # pyright: ignore

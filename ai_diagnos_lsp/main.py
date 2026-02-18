@@ -8,12 +8,13 @@ import os
 import logging
 
 from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
+from .default_config import DEFAULT_CONFIG, DefaultConfigType
 
 def main():
     """
     The server setup function. 
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.10.0 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.10.1 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
@@ -23,6 +24,8 @@ def main():
 
         and returns the capabilities of the server
         """
+
+        ls.config = DEFAULT_CONFIG
 
         assert params.initialization_options is not None
         if os.getenv("AI_DIAGNOS_LOG"):
@@ -68,7 +71,7 @@ def main():
 
     @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
     def did_open(ls: AIDiagnosLSP, params: types.DidOpenTextDocumentParams):
-        """ Try co load saved diagnostics forthe file, if fails, analyse.  """
+        """ Try to load saved diagnostics forthe file, if fails, analyse.  """
 
         doc = ls.workspace.get_text_document(params.text_document.uri)
 
@@ -156,6 +159,7 @@ def main():
         """ Clears AI diagnostics for the provided URI """
         ls.diagnostics[params[0]] = (None, None)
         ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "successfully cleared the diagnostics"))
+        ls.workspace_diagnostic_refresh(None)
 
     @server.command("Clear.AIDiagnostics.All")
     def ClearAllAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[Any | None]):
@@ -163,6 +167,7 @@ def main():
         for i in ls.diagnostics:
             ls.diagnostics[i] = (None, None)
         ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "succesfully cleared the diagnostics"))
+        ls.workspace_diagnostic_refresh(None)
 
     server.start_io()
 

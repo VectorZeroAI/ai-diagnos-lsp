@@ -129,7 +129,8 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
                                 document,
                                 scope=config['scope'],
                                 analysis_max_depth=config.get('max_analysis_depth'),
-                                max_string_size_char=config.get('max_string_size_char')
+                                max_string_size_char=config.get('max_string_size_char'),
+                                plugins=ls.config.get("plugins")
                                 )
 
                     if isinstance(document, TextDocument):

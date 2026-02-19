@@ -22,22 +22,25 @@ class DefaultConfigType(TypedDict):
     show_progress: bool
     show_progress_every_ms: int | float
     ai_diagnostics_symbol: str
-    #------
+
     use_omniprovider: bool
-    #------
+
     use_gemini: bool
     model_gemini: str
     fallback_models_gemini: list[str]
-    #------
+
     use_openrouter: bool
     model_openrouter: str
-    #------
+
     use_groq: bool
     model_groq: str
     fallback_models_groq: list[str]
+
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig
     DiagnosticsSubsystem: DiagnosticsSubsystemConfig
+
+    plugins: dict[str, str]
 
 
 class user_config(DefaultConfigType):
@@ -88,5 +91,8 @@ DEFAULT_CONFIG: DefaultConfigType = {
         "check_ttl_for_invalidation": 5,
         "ttl_until_deletion": 2592000,
         "ttl_until_invalidation": 15
+    },
+    "plugins": {
+        ".py": "/the/example/path/for/ya/to/see/how/this/works"
     }
 }

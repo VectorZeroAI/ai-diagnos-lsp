@@ -11,6 +11,8 @@ from lsprotocol import types
 import logging
 import os
 
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileLogicAnalyser import CrossFileLogicAnalyser
+
 if os.getenv("AI_DIAGNOS_LOG") is not None:
     log = True
 else:
@@ -109,7 +111,7 @@ class AnalysisSubsystem:
                 if len(doc.lines) > self.ls.config["max_file_size"]:
                     self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Filesize bigger then max file size defined at config"))
                     return
-            elif isinstance(doc, Path):
+            else:
                 uri = doc.as_uri()
                 with doc.open() as f:
                     if len(f.readlines()) > self.ls.config.get("max_file_size"):
@@ -144,6 +146,14 @@ class AnalysisSubsystem:
                     if time.time() - self.last_analysed_at["BasicLogic"][uri] > self.ls.config["debounce_ms"] / 1000:
                         self.submited_analyses["BasicLogic"][uri] = self.executor.submit(BasicLogicAnalyserWorker, self.ls, doc)
                         self.last_analysed_at["BasicLogic"][uri] = time.time()
+                    else:
+                        # TODO : Implement a configuration option for "at debounce do".
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+
+                if "CrossFileLogic" in self.ls.config["AnalysisSubsystem"][event]:
+                    if time.time() - self.last_analysed_at["CrossFileLogic"][uri] > self.ls.config["debounce_ms"] / 1000:
+                        self.submited_analyses["CrossFileLogic"][uri] = self.executor.submit(CrossFileLogicAnalyser, self.ls, doc)
+                        self.last_analysed_at["CrossFileLogic"][uri] = time.time()
                     else:
                         # TODO : Implement a configuration option for "at debounce do".
                         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))

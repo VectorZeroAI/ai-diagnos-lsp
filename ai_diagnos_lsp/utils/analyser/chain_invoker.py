@@ -27,7 +27,7 @@ else:
     LOG = False # pyright: ignore
 
 
-def chain_invoker_function_cross_file(document: TextDocument | Path, config: user_config, chain: Runnable[Any, Any], ls: AIDiagnosLSP) -> None:
+def chain_invoker_function_cross_file(document: TextDocument | Path, config: user_config, chain: Runnable[Any, Any], ls: AIDiagnosLSP, analysis_type: str) -> None:
     """
     Abstracts away the copy pasta of invoking langchain. 
     The smart thing is passing the chain directly in as a runnable. 
@@ -115,12 +115,12 @@ def chain_invoker_function_cross_file(document: TextDocument | Path, config: use
         if ls.config['show_progress']:
             threading.Thread(target=LangchainStillRunningPingerThread, args=(ls, ls.config['show_progress_every_ms']), daemon=True).start()
     except KeyError as e:
-        raise RuntimeError(f"Lines 145-146, Cross file analyser thread, Key error {e}") from e
+        raise RuntimeError(f"Cross file analyser thread, Key error {e}") from e
 
     try:
         timeout = ls.config['timeout']
     except KeyError as e:
-        raise RuntimeError(f"Line 151, Cross file analyser thread, key error {e}") from e
+        raise RuntimeError(f"Cross file analyser thread, key error {e}") from e
 
     if timeout > threading.TIMEOUT_MAX:
         timeout = threading.TIMEOUT_MAX
@@ -141,13 +141,138 @@ def chain_invoker_function_cross_file(document: TextDocument | Path, config: use
         if isinstance(document, TextDocument):
             ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
                                                                     document_uri=document.uri,
-                                                                    analysis_type='CrossFile'
+                                                                    analysis_type=analysis_type
                                                                 )
             ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.uri)
         else:
             ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
                                                                     document_uri=document.as_uri(),
-                                                                    analysis_type='CrossFile'
+                                                                    analysis_type=analysis_type
+                                                                )
+            ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.as_uri())
+        if LOG:
+            logging.info("Cross file analyser : Published the diagnostics")
+
+    except Exception as e:
+        if LOG:
+            logging.error("Cross File Analyser : Couldnt register diagnostics into Diagnostics handling subsystem")
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt register diagnostics due to the following reason: {e}"))
+        return
+    else:
+        if LOG:
+            logging.info("Cross file analyser : sucsessfully registered the diagnostics into the Diagnostics handling subsystem")
+        return
+
+
+def chain_invoker_function_basic(document: TextDocument | Path, config: user_config, chain: Runnable[Any, Any], ls: AIDiagnosLSP, analysis_type: str) -> None:
+    """
+    Abstracts away the copy pasta of invoking langchain. 
+    The smart thing is passing the chain directly in as a runnable. 
+    The idea is that aliasing means pointers, and I can alias my assembled chain to the argument, effectively 
+    passing the pointer to the function in. 
+    """
+    langchain_completed_event = threading.Event()
+    langchain_timed_out = threading.Event()
+    langchain_failed = threading.Event()
+
+    tmp = None
+
+    def LangchainInvokingThread(document: TextDocument | Path):
+        try:
+            try:
+                nonlocal tmp
+                if LOG:
+                    logging.info("Langchain invoking thread inside cross file analyser started")
+
+                if isinstance(document, TextDocument):
+                    tmp = chain.invoke({
+                        "file_content": document.source
+                    })
+
+                else:
+                    tmp = chain.invoke({
+                        "file_content": document.read_text()
+                    })
+
+                if LOG:
+                    logging.info(f""" Basic analysis langchain started with the following input: 
+                                 {document.source if isinstance(document, TextDocument) else document.read_text()}
+                                 """)
+            except KeyError as e:
+                raise RuntimeError(f"Key error in Langchain Invoking thread, inside Basic analyser. {e}"
+                                   ) from e
+
+            langchain_completed_event.set()
+        except Exception as e:
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Langchain invoking thread errored out with the following error : {e}"))
+            langchain_completed_event.set()
+            langchain_failed.set()
+
+    threading.Thread(target=LangchainInvokingThread, args=(document,), daemon=True).start()
+
+    if LOG:
+        logging.info("starting the basic analysis chain")
+        if isinstance(document, TextDocument):
+            logging.info(f"basic chain started with input file as {document.source}")
+            logging.info("basic chain started with basic content.")
+        else:
+            logging.info(f"basic chain started with input file as {document.read_text()}")
+            logging.info("basic chain started with basic content.")
+
+
+    def LangchainStillRunningPingerThread(ls: AIDiagnosLSP, show_progress_every_ms: int):
+        if LOG:
+            logging.info("Langchain Pinger thread started")
+
+        counter = 1
+
+        while not (langchain_completed_event.is_set() or langchain_timed_out.is_set()):
+            ls.window_show_message(types.ShowMessageParams(types.MessageType(3), f"Langchain still running [{counter}]"))
+            counter = counter + 1
+            time.sleep(show_progress_every_ms / 1000)
+            if LOG:
+                logging.info("Langchain is still running")
+
+        if LOG:
+            logging.info("Langchain Pinger thread exited")
+            
+    try:
+        if ls.config['show_progress']:
+            threading.Thread(target=LangchainStillRunningPingerThread, args=(ls, ls.config['show_progress_every_ms']), daemon=True).start()
+    except KeyError as e:
+        raise RuntimeError(f"Basic Analyser thread, Key error {e}") from e
+
+    try:
+        timeout = ls.config['timeout']
+    except KeyError as e:
+        raise RuntimeError(f"Basic analyser thread, key error {e}") from e
+
+    if timeout > threading.TIMEOUT_MAX:
+        timeout = threading.TIMEOUT_MAX
+        
+    if langchain_completed_event.wait(timeout):
+        pass
+    else:
+        langchain_timed_out.set()
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Langchain timed out"))
+        return
+
+    if langchain_failed.is_set():
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "Langchain FAILED"))
+        return
+
+
+    try:
+        if isinstance(document, TextDocument):
+            ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                    document_uri=document.uri,
+                                                                    analysis_type=analysis_type
+                                                                )
+            ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.uri)
+        else:
+            ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
+                                                                    document_uri=document.as_uri(),
+                                                                    analysis_type=analysis_type
                                                                 )
             ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(document.as_uri())
         if LOG:

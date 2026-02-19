@@ -25,16 +25,19 @@ class DefaultConfigType(TypedDict):
 
     use_omniprovider: bool
 
+    model_cerebras: str
+    fallback_models_cerebras: list[str] | None
+
     use_gemini: bool
     model_gemini: str
-    fallback_models_gemini: list[str]
+    fallback_models_gemini: list[str] | None
 
     use_openrouter: bool
     model_openrouter: str
 
     use_groq: bool
     model_groq: str
-    fallback_models_groq: list[str]
+    fallback_models_groq: list[str] | None
 
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig
@@ -47,6 +50,7 @@ class user_config(DefaultConfigType):
     api_key_gemini: str
     api_key_openrouter: str
     api_key_groq: str
+    api_key_cerebras: str
 
 DEFAULT_CONFIG: DefaultConfigType = {
     "timeout": 99999,
@@ -72,6 +76,9 @@ DEFAULT_CONFIG: DefaultConfigType = {
     "fallback_models_groq": [
         "openai/gpt-oss-20b", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b", "llama-3.3-70b-versatile"
     ], # AI diagnos lsp: This groq configuration was tested and proved to be functional. 
+
+    "model_cerebras": "gpt-oss-120b",
+    "fallback_models_cerebras": None,
 
     "AnalysisSubsystem": {
         "write": [ "CrossFile", "Basic" ],

@@ -167,35 +167,12 @@ Common issues:
 - **No diagnostics appear**: Check that the file type is supported (the client must request diagnostics; the LSP only responds to pull requests). Verify that the file size is below `max_file_size` and that debounce is not suppressing the request.
 - **LLM errors**: Inspect the log for API errors or timeouts. Verify that the model names are correct and the API keys have access.
 
-## Development
 
-The codebase is organised as follows:
-
-```
-ai_diagnos_lsp/
-├── pyproject.toml
-├── AIDiagnosLSPClass.py          # Main server class
-├── default_config.py              # Default configuration
-├── main.py                        # Entry point (server start)
-├── AnalysisSubsystem/              # Analysis subsystem
-│   ├── AnalysisSubsystemClass.py
-│   ├── analysers/
-│   │   ├── BasicDiagnoseFunction.py
-│   │   ├── CrossFileAnalyser.py
-│   │   └── chains/                 # LangChain components
-│   │       ├── LLM/                 # Provider-specific LLM factories
-│   │       ├── PromptObjekts/       # Prompt templates
-│   │       └── GeneralDiagnosticsPydanticOutputParser.py
-├── DiagnosticsHandlingSubsystem/    # Storage subsystem
-│   ├── main.py
-│   └── Converters/                  # Pydantic → LSP conversion
-├── utils/                            # Utilities
-│   ├── grep.py
-│   └── parser.py                     # Python import resolution
-└── README.md                         # This file
-```
+## Contributions
 
 Contributions are welcome - especially new parsers
+I will be creating a repo as a way to distribute the plugin parsers.
+TODO : Dont forget to add the repo here. 
 
 ## License
 

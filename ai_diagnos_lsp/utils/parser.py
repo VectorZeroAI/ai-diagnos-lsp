@@ -194,7 +194,7 @@ def resolve_relative_import(info: dict[Literal['name', 'level', 'module'], Any],
         if current_step_try.is_file():
             return current_step_try
         elif current_step_try.is_dir():
-            current_step_try = current_step_try / '__init__.py'
+            current_step_try = current_step_try / '__init__.py'   # IDK WHY I DID THIS LOL, but it doesnt hurt to try one last time, you know ?
             if current_step_try.is_file():
                 return current_step_try
 
@@ -218,9 +218,10 @@ def resolve_import(import_statement: str | dict[Literal['name', 'level', 'module
     return result
 
 
-def parse_file(file: TextDocument | Path, scope: list[str], plugins: ParserPluginsDict) -> list[Path]:
+def parse_file(file: TextDocument | Path, scope: list[str], plugins: ParserPluginsDict | None) -> list[Path]:
     """
     Parses the file, with ether built in parser or with a plugin parser. 
+
     Checks the file type by checking file extension. 
     """
     
@@ -229,12 +230,11 @@ def parse_file(file: TextDocument | Path, scope: list[str], plugins: ParserPlugi
     if isinstance(file, TextDocument):
         source = file.source
         path_of_the_analysed_file: Path = Path(file.path)
-        file_type: str = '.' + path_of_the_analysed_file.parts[-1].split('.')[-1]
-        """ Whatever the hell comes after the dot in the filename. dot included. ! """
+        file_type: str = path_of_the_analysed_file.suffix
     else:
         source = file.read_text()
         path_of_the_analysed_file: Path = file.absolute().resolve()
-        file_type: str = '.' + path_of_the_analysed_file.parts[-1].split('.')[-1]
+        file_type: str = path_of_the_analysed_file.suffix
 
     if file_type == '.py':
         imports_lists_tuple = parse_source(source)
@@ -286,18 +286,18 @@ def parse_file(file: TextDocument | Path, scope: list[str], plugins: ParserPlugi
 
 
     else:
-
-        plug_in_found = plugins.get(file_type)
-        if plug_in_found is not None:
-            result_pre = plugin_loader(Path(plug_in_found),
-                                   scope=scope,
-                                   solid_str_file_content=source,
-                                   file_path=path_of_the_analysed_file
-                                   )
-            if result_pre is not None:
-                result = result_pre
-            else:
-                result = []
+        if plugins is not None:
+            plug_in_found = plugins.get(file_type)
+            if plug_in_found is not None:
+                result_pre = plugin_loader(Path(plug_in_found),
+                                       scope=scope,
+                                       solid_str_file_content=source,
+                                       file_path=path_of_the_analysed_file
+                                       )
+                if result_pre is not None:
+                    result = result_pre
+                else:
+                    result = []
 
     return result
     
@@ -330,7 +330,7 @@ def get_cross_file_context(file: TextDocument | Path,
 
     unified_list_of_all_the_imports: set[Path] = set()
 
-    prev_iteration_result: list[Path] = parse_file(file, scope)
+    prev_iteration_result: list[Path] = parse_file(file, scope, plugins)
 
     if isinstance(file, TextDocument):
         visited_files.add(Path(file.path))
@@ -352,7 +352,7 @@ def get_cross_file_context(file: TextDocument | Path,
                 else:
                     visited_files.add(i)
 
-                iteration_result = parse_file(i, scope)
+                iteration_result = parse_file(i, scope, plugins)
 
                 if len(iteration_result) > 0:
 
@@ -375,7 +375,7 @@ def get_cross_file_context(file: TextDocument | Path,
                 else:
                     visited_files.add(i)
 
-                iteration_result = parse_file(i, scope)
+                iteration_result = parse_file(i, scope, plugins)
 
                 if len(iteration_result) > 0:
 

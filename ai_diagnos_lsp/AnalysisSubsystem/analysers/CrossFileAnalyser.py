@@ -13,7 +13,7 @@ import logging
 from pygls.workspace import TextDocument
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
-from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function
+from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_cross_file
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 
 from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromptFactory
@@ -62,11 +62,12 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         chain = prompt | llm | output_parser
 
-        chain_invoker_function(
+        chain_invoker_function_cross_file(
                 document=file,
                 config=ls.config,
                 chain=chain,
-                ls=ls
+                ls=ls,
+                analysis_type='CrossFile'
                 )
         
     except (KeyError, RuntimeError, Exception) as e:

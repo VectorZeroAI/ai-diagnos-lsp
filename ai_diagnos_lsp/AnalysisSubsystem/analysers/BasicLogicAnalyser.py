@@ -8,7 +8,7 @@ from pathlib import Path
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicLogicAnalysisPrompt import BasicLogicAnalysisPromptFactory
-from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function
+from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_basic, chain_invoker_function_cross_file
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 
 if TYPE_CHECKING:
@@ -31,11 +31,12 @@ def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
         chain = prompt | llm | output
         
 
-        chain_invoker_function(
+        chain_invoker_function_basic(
                 document=document,
                 config=ls.config,
                 chain=chain,
-                ls = ls
+                ls = ls,
+                analysis_type='BasicLogic'
                 )
 
     

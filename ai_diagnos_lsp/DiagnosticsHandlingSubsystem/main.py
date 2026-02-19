@@ -285,6 +285,7 @@ class DiagnosticsHandlingSubsystemClass:
                     logging.error(f"TTLBasedDeletionThread encoutered the following problem : {e}")
             finally:
                 time.sleep(self.check_ttl_for_deletion)
+        curr.close()
 
     def TTLBasedDiagnosticsInvalidationThread(self):
         """
@@ -326,10 +327,12 @@ class DiagnosticsHandlingSubsystemClass:
                         if os.getenv("AI_DIAGNOS_LOG") is not None:
                             logging.info(f"Did not delete, because last_changed_at = {file_change_time[0]}, and diagnostics were created at {i[1]}, with self.ttl_seconds_until_invalidation being {self.ttl_seconds_until_invalidation}")
                         
-                time.sleep(self.check_ttl_for_invalidation)
             except Exception as e:
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.error(f"TTLBasedDiagnosticsInvalidationThread encoutered the follwoign error: {e}")
+            finally:
+                time.sleep(self.check_ttl_for_invalidation)
+        curr.close()
 
 def DiagnosticsHandlingSubsystemFactory(ls: AIDiagnosLSP,) -> DiagnosticsHandlingSubsystemClass:
     return DiagnosticsHandlingSubsystemClass(ls=ls)

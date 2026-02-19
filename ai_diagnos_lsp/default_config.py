@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-The default config, wich will get partially or fully overwritten by the user config. 
+The default config, which will get partially or fully overwritten by the user config. 
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ class DefaultConfigType(TypedDict):
 
     use_omniprovider: bool
 
+    use_cerebras: bool
     model_cerebras: str
     fallback_models_cerebras: list[str] | None
 
@@ -77,6 +78,7 @@ DEFAULT_CONFIG: DefaultConfigType = {
         "openai/gpt-oss-20b", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b", "llama-3.3-70b-versatile"
     ], # AI diagnos lsp: This groq configuration was tested and proved to be functional. 
 
+    "use_cerebras": False,
     "model_cerebras": "gpt-oss-120b",
     "fallback_models_cerebras": None,
 

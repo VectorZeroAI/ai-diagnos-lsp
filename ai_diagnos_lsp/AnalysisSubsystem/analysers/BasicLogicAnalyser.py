@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicLogicAnalysisPrompt import BasicAnalysisPromptFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicLogicAnalysisPrompt import BasicLogicAnalysisPromptFactory
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 
@@ -24,7 +24,7 @@ def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
 
         llm = LlmFactoryWithConfig(ls.config)
         
-        prompt = BasicAnalysisPromptFactory()
+        prompt = BasicLogicAnalysisPromptFactory()
 
         output =  GeneralDiagnosticsOutputParserFactory()
 
@@ -42,7 +42,4 @@ def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
     except Exception as e:
         ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"The whole worker thread errored out with the following error: {e}"))
         return
-
-
-
 

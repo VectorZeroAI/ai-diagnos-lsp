@@ -18,13 +18,10 @@ from lsprotocol import types
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 
-from .chains.LLM.BasicOmniproviderLLM import BasicOmniproviderLLMFactory
-from .chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
-from .chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
-from .chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
 from .chains.PromptObjekts.CrossFileLogicAnalysisPrompt import CrossFileLogicAnalysisPromptFactory
 
 from ai_diagnos_lsp.utils.parser import get_cross_file_context
+from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 
 
 if TYPE_CHECKING:
@@ -58,55 +55,16 @@ def CrossFileLogicAnalyser(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         if LOG:
             logging.info("Cross File analyser Worker thread started")
-        try:
-            if ls.config["use_omniprovider"]:
-
-                llm = BasicOmniproviderLLMFactory(
-                        model_openrouter=ls.config["model_openrouter"],
-                        api_key_openrouter=ls.config["api_key_openrouter"],
-                        api_key_gemini=ls.config["api_key_gemini"],
-                        model_gemini=ls.config["model_gemini"],
-                        fallback_models_gemini=ls.config.get("fallback_models_gemini"),
-                        api_key_groq=ls.config["api_key_groq"],
-                        model_groq=ls.config["model_groq"],
-                        fallback_models_groq=ls.config.get("fallback_models_groq")
-                        )
-
-            elif ls.config["use_gemini"]:
-
-                llm = BasicGeminiLlmFactory(
-                        api_key_gemini=ls.config["api_key_gemini"],
-                        model_gemini=ls.config["model_gemini"],
-                        fallback_gemini_models=ls.config.get("fallback_models_gemini")
-                        )
-
-            elif ls.config["use_openrouter"]:
-                llm = OpenrouterLlmFactory(
-                        model_openrouter=ls.config["model_openrouter"],
-                        api_key_openrouter=ls.config["api_key_openrouter"]
-                        )
-
-            elif ls.config['use_groq']:
-                llm = BasicGroqLLMFactory(
-                        model_groq=ls.config['model_groq'],
-                        api_key_groq=ls.config['api_key_groq'],
-                        fallback_models_groq=ls.config['fallback_models_groq']
-                        )
-            else:
-                ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
-                raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
-
-            config = ls.config['CrossFileAnalysis']
-
-        except KeyError as e:
-            raise RuntimeError(f"lines 49-86, Cross file analyser thread, Key error {e}") from e
 
         prompt = CrossFileLogicAnalysisPromptFactory()
+
+        llm = LlmFactoryWithConfig(ls.config)
 
         output_parser = GeneralDiagnosticsOutputParserFactory()
 
         chain = prompt | llm | output_parser
 
+        config = ls.config['CrossFileAnalysis']
         
         if LOG:
             logging.info("chain initialized")
@@ -219,13 +177,13 @@ def CrossFileLogicAnalyser(ls: AIDiagnosLSP, file: TextDocument | Path):
             if isinstance(file, TextDocument):
                 ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
                                                                         document_uri=file.uri,
-                                                                        analysis_type='CrossFile'
+                                                                        analysis_type='CrossFileLogic'
                                                                     )
                 ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.uri)
             else:
                 ls.DiagnosticsHandlingSubsystem.save_new_diagnostic(diagnostics=tmp,
                                                                         document_uri=file.as_uri(),
-                                                                        analysis_type='CrossFile'
+                                                                        analysis_type='CrossFileLogic'
                                                                     )
                 ls.DiagnosticsHandlingSubsystem.load_diagnostics_for_file(file.as_uri())
             if LOG:

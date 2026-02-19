@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from .prompts.general_logic_analysis_system_prompt import CROSS_FILE_LOGIC_ANALYSIS_PROMPT
 
-def CrossFileAnalysisPromptFactory():
+def CrossFileLogicAnalysisPromptFactory():
 
     return ChatPromptTemplate.from_messages([
         ("system", f"{CROSS_FILE_LOGIC_ANALYSIS_PROMPT}"),

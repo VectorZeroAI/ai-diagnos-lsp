@@ -11,7 +11,7 @@ from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM im
 if TYPE_CHECKING:
     from ai_diagnos_lsp.default_config import user_config
 
-def LlmFactoryWithConfig(config: user_config) -> Runnable[Any, Any]:
+def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
     """
     The llm generator function. Basically a factory function / util that takes the config in and returns 
     the appropriate llm according to the configuration

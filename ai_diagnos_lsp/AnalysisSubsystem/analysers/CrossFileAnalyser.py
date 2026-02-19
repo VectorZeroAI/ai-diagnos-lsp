@@ -5,18 +5,16 @@ The cross file analysis worker thread
 from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict
 
-import threading
 from pathlib import Path
 import os
 import logging
-import time
 
 from pygls.workspace import TextDocument
 
 from lsprotocol import types
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
-from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker
+from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function
 
 from .chains.LLM.BasicOmniproviderLLM import BasicOmniproviderLLMFactory
 from .chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
@@ -24,7 +22,6 @@ from .chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
 from .chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
 from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromptFactory
 
-from ai_diagnos_lsp.utils.parser import get_cross_file_context
 
 
 if TYPE_CHECKING:
@@ -98,7 +95,6 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
                 ls.window_show_message(types.ShowMessageParams(types.MessageType(1), "INVALID CONFIGURATION RECIEVED. One of use parameters must be true !"))
                 raise RuntimeError("INVALID CONFIGURATION RECEIVED. One of use parameters must be true !")
 
-            config = ls.config['CrossFileAnalysis']
 
         except KeyError as e:
             raise RuntimeError(f"lines 49-86, Cross file analyser thread, Key error {e}") from e
@@ -109,7 +105,12 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         chain = prompt | llm | output_parser
 
-        chain_invoker()
+        chain_invoker_function(
+                document=file,
+                config=ls.config,
+                chain=chain,
+                ls=ls
+                )
         
     except (KeyError, RuntimeError, Exception) as e:
         if isinstance(e, KeyError):

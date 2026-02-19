@@ -11,6 +11,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "langchain" },
+    { name = "langchain-cerebras" },
     { name = "langchain-google-genai" },
     { name = "langchain-groq" },
     { name = "langchain-openai" },
@@ -20,6 +21,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "langchain", specifier = ">=1.2.9" },
+    { name = "langchain-cerebras", specifier = ">=0.7.0" },
     { name = "langchain-google-genai", extras = ["standart"], specifier = ">=4.2.0" },
     { name = "langchain-groq", specifier = ">=1.0.0" },
     { name = "langchain-openai", specifier = ">=1.1.7" },
@@ -477,6 +479,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ff/d5/e7c8d18bf1ee2d37839dde161d523049fd0a5b172cf4c62f17090e1b4dcb/langchain-1.2.9.tar.gz", hash = "sha256:ae266c640b63c38f16b6d996a50aea575940b29b63cbc652c5d12f0111357f01", size = 569621, upload-time = "2026-02-06T12:39:41.824Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f3/d9/ee07b79f8f1cfd87a6b147879149bdb03c04656e83e5a8c97f38d8915d07/langchain-1.2.9-py3-none-any.whl", hash = "sha256:c1af39d22b7f0415a6f8fa63b37f692335601d3333592c481b899166c55f3fcb", size = 111240, upload-time = "2026-02-06T12:39:39.833Z" },
+]
+
+[[package]]
+name = "langchain-cerebras"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "langchain-core" },
+    { name = "langchain-openai" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/05/b5724720315719c897259c77474e6ed6be16287e82906909956b40c7cf36/langchain_cerebras-0.7.0.tar.gz", hash = "sha256:efb6f25c13ebdeee892c3dbc2ce2ec6e072e142010130f804f6ccd89dc5092f2", size = 7396, upload-time = "2025-11-14T06:15:12.382Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/f0/477b73046e37f8a1b8d0cc54985a280acfe9208e67bbfd1ee45254243cc4/langchain_cerebras-0.7.0-py3-none-any.whl", hash = "sha256:ef7ade74f745ebdcd7c2aa8c06f430a26517860d2e992adfdd1c8d3dced71156", size = 7830, upload-time = "2025-11-14T06:15:11.291Z" },
 ]
 
 [[package]]

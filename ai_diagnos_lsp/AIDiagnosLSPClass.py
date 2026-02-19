@@ -8,6 +8,7 @@ import threading
 
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsHandlingSubsystemFactory
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemClassFactory
+from ai_diagnos_lsp.default_config import DefaultConfigType
 
 class AIDiagnosLSP(LanguageServer):
     """
@@ -30,7 +31,7 @@ class AIDiagnosLSP(LanguageServer):
 
         self.diagnostics: dict[str, tuple[int | Any, Any] | tuple[None, None]] = {}
         self.last_diagnostic_time = {}
-        self.config: config = {} # pyright: ignore
+        self.config: DefaultConfigType = {} # pyright: ignore
         self.diagnostics_lock = threading.Lock()
 
     def init_subsystems(self) -> None:

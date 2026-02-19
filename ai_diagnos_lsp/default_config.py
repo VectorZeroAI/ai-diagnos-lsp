@@ -11,7 +11,7 @@ from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubs
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalysisConfig
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsSubsystemConfig
 
-LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "Logic", "Style", "Security", "Deep"]
+LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "BasicSecurity", "CrossFileSecurity", "Deep", "Workspace"]
     
 
 class DefaultConfigType(TypedDict):

@@ -4,11 +4,6 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 
 from pygls.workspace import TextDocument
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalyserWorkerThread
-
-if TYPE_CHECKING:
-    from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
-
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 import time
@@ -22,9 +17,12 @@ else:
     log = False
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalyserWorkerThread
+from .analysers.BasicLogicAnalyser import BasicLogicAnalyserWorker
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.default_config import LiteralSupportedAnalysisTypes
+    from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
 class AnalysisSubsystemConfig(TypedDict):
     write: list[LiteralSupportedAnalysisTypes]
@@ -106,19 +104,17 @@ class AnalysisSubsystem:
                 }
         """
         try:
-            if type(doc) is TextDocument:
+            if isinstance(doc, TextDocument):
                 uri = doc.uri
                 if len(doc.lines) > self.ls.config["max_file_size"]:
                     self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Filesize bigger then max file size defined at config"))
                     return
-            elif type(doc) is Path:
+            elif isinstance(doc, Path):
                 uri = doc.as_uri()
                 with doc.open() as f:
                     if len(f.readlines()) > self.ls.config.get("max_file_size"):
                         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Filesize bigger then max file size defined at config"))
                         return
-            else:
-                raise TypeError(f"Invalid input type on doc parameter. Got {doc} of type {type(doc)}, expected object of type TextDocument or Path")
 
             for i in self.last_analysed_at:
                 uris = self.last_analysed_at[i]
@@ -144,6 +140,14 @@ class AnalysisSubsystem:
                         # TODO : Implement a configuration option for "at debounce do".
                         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
 
+                if "BasicLogic" in self.ls.config["AnalysisSubsystem"][event]:
+                    if time.time() - self.last_analysed_at["BasicLogic"][uri] > self.ls.config["debounce_ms"] / 1000:
+                        self.submited_analyses["BasicLogic"][uri] = self.executor.submit(BasicLogicAnalyserWorker, self.ls, doc)
+                        self.last_analysed_at["BasicLogic"][uri] = time.time()
+                    else:
+                        # TODO : Implement a configuration option for "at debounce do".
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+
             except KeyError as e:
                 if log:
                     logging.error(f"Encountered a key error inside the config. {e}")
@@ -152,10 +156,6 @@ class AnalysisSubsystem:
             # And so on for every member of the ls.SUPPORTED_DIAGNOSTICS_TYPES list. 
         except Exception as e:
             raise RuntimeError(f"Otherwise uncaught exception happened in Analysis Subsystem Class file in submit document for analyis method. {e}") from e
-
-
-
-
 
     def get_status(self):
         """

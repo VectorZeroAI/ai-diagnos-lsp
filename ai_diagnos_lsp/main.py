@@ -8,7 +8,7 @@ import os
 import logging
 
 from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
-from .default_config import DEFAULT_CONFIG, DefaultConfigType
+from .default_config import DEFAULT_CONFIG
 
 def main():
     """

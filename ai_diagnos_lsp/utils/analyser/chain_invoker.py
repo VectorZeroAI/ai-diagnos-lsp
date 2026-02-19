@@ -27,7 +27,7 @@ else:
     LOG = False # pyright: ignore
 
 
-def chain_invoker(document: TextDocument | Path, config: user_config, chain: Runnable[Any, Any], ls: AIDiagnosLSP) -> None:
+def chain_invoker_function(document: TextDocument | Path, config: user_config, chain: Runnable[Any, Any], ls: AIDiagnosLSP) -> None:
     """
     Abstracts away the copy pasta of invoking langchain. 
     The smart thing is passing the chain directly in as a runnable. 

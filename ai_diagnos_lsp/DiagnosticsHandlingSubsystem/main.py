@@ -3,7 +3,7 @@
 from __future__ import annotations
 import sqlite3
 import threading
-from typing import TYPE_CHECKING, TypedDict, NotRequired
+from typing import TYPE_CHECKING, TypedDict
 import time
 import logging
 import os

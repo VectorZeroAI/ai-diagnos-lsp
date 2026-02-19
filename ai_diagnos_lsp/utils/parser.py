@@ -7,13 +7,57 @@ from pygls.workspace import TextDocument
 from importlib import util
 import os
 import logging
+import subprocess
+import json
 
 ROOT_MARKERS = {"setup.py", "pyproject.toml", "setup.cfg"}
 
 LOG = True if os.getenv('AI_DIAGNOS_LOG') is not None else False
 
+ParserPluginsDict = dict[str, str]
+
+
+def plugin_loader(plugin_path: Path,
+                  scope: list[str],
+                  solid_str_file_content: str,
+                  file_path: Path
+                  ) -> list[Path] | None:
+    
+    json_payload = {
+            "project_scope": scope,
+            "file_content": solid_str_file_content.splitlines(),
+            "solid_file_content": solid_str_file_content,
+            "file_path": file_path.as_posix()
+            }
+    json_payload = json.dumps(json_payload)
+
+    try:
+        result_strings = subprocess.run(plugin_path.as_posix(), 
+                       input=json_payload,
+                       capture_output=True,
+                       text=True
+                       )
+
+        result_strings = json.loads(result_strings.stdout)
+    except Exception as e:
+        if LOG:
+            logging.error(f"subprocess running or reading its stdout into json failed with error {e}")
+        return None
+    
+    result_Path_objects: list[Path] = []
+
+    for i in result_strings:
+        result_Path_objects.append(Path(i))
+
+    return result_Path_objects
+
+
+
 def find_project_root(path: Path) -> Path:
     """Walk up directories until a project root marker is found."""
+    if path.is_dir():
+        if any((path / marker).exists() for marker in ROOT_MARKERS):
+            return path
     for parent in path.parents:
         if any((parent / marker).exists() for marker in ROOT_MARKERS):
             return parent
@@ -51,8 +95,6 @@ def parse_source(source: str) -> tuple[list[str], list[dict[Literal["name", "lev
             continue
 
     return (imports, from_imports)
-
-
 
 def resolve_absolute_import(absolute_import_statement: str, root_project: str) -> Path | None:
     """
@@ -176,62 +218,86 @@ def resolve_import(import_statement: str | dict[Literal['name', 'level', 'module
     return result
 
 
-def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
+def parse_file(file: TextDocument | Path, scope: list[str], plugins: ParserPluginsDict) -> list[Path]:
+    """
+    Parses the file, with ether built in parser or with a plugin parser. 
+    Checks the file type by checking file extension. 
+    """
     
     result: list[Path] = []
 
     if isinstance(file, TextDocument):
         source = file.source
         path_of_the_analysed_file: Path = Path(file.path)
+        file_type: str = '.' + path_of_the_analysed_file.parts[-1].split('.')[-1]
+        """ Whatever the hell comes after the dot in the filename. dot included. ! """
     else:
         source = file.read_text()
         path_of_the_analysed_file: Path = file.absolute().resolve()
+        file_type: str = '.' + path_of_the_analysed_file.parts[-1].split('.')[-1]
 
-    imports_lists_tuple = parse_source(source)
+    if file_type == '.py':
+        imports_lists_tuple = parse_source(source)
 
-    for i in imports_lists_tuple[0]:
-        try:
-            spec = util.find_spec(i)
-            if spec and spec.origin:
-                resulting_file_path = Path(spec.origin)
-                if any(Path(s) in resulting_file_path.parents for s in scope):
-                    result.append(resulting_file_path)
+        for i in imports_lists_tuple[0]:
+            try:
+                spec = util.find_spec(i)
+                if spec and spec.origin:
+                    resulting_file_path = Path(spec.origin)
+                    if any(Path(s) in resulting_file_path.parents for s in scope):
+                        result.append(resulting_file_path)
+                    else:
+                        continue
+            except Exception as e:
+                if LOG: 
+                    logging.info(f"error ecountered by the parser (upper) : {e}")
+                tmp = resolve_import(i, path_of_the_analysed_file)
+                if tmp is not None:
+                    result.append(tmp)
                 else:
-                    continue
-        except Exception as e:
-            if LOG: 
-                logging.info(f"error ecountered by the parser (upper) : {e}")
-            tmp = resolve_import(i, path_of_the_analysed_file)
-            if tmp is not None:
-                result.append(tmp)
-            else:
-                if LOG:
-                    logging.info("My directory traversal based resolver failed as well. ")
+                    if LOG:
+                        logging.info("My directory traversal based resolver failed as well. ")
 
-    for i in imports_lists_tuple[1]:
-        try:
-            if i['level'] > 0:
-                # relative import
-                dots = '.' * i['level']
-                absolute_import_statement = util.resolve_name(f"{dots}{i.get('module') + '.' if i.get('module') is not None else ""}{i['name']}", # pyright: ignore
-                                                              f"{path_to_dotted(path_of_the_analysed_file)}"
-                                                              )
-            else:
-                absolute_import_statement = f"{i.get('module') + '.' if i.get('module') is not None else ''}{i['name']}" # pyright: ignore
-
-            spec = util.find_spec(absolute_import_statement)
-            if spec and spec.origin:
-                resulting_file_path = Path(spec.origin)
-                if any(Path(s) in resulting_file_path.parents for s in scope):
-                    result.append(resulting_file_path)
+        for i in imports_lists_tuple[1]:
+            try:
+                if i['level'] > 0:
+                    # relative import
+                    dots = '.' * i['level']
+                    absolute_import_statement = util.resolve_name(f"{dots}{i.get('module') + '.' if i.get('module') is not None else ""}{i['name']}", # pyright: ignore
+                                                                  f"{path_to_dotted(path_of_the_analysed_file)}"
+                                                                  )
                 else:
-                    continue
-        except Exception as e:
-            if LOG: 
-                logging.info(f"attribute error encoutered by parser: {e}")
-            tmp = resolve_import(i, path_of_the_analysed_file)
-            if tmp is not None: 
-                result.append(tmp)
+                    absolute_import_statement = f"{i.get('module') + '.' if i.get('module') is not None else ''}{i['name']}" # pyright: ignore
+
+                spec = util.find_spec(absolute_import_statement)
+                if spec and spec.origin:
+                    resulting_file_path = Path(spec.origin)
+                    if any(Path(s) in resulting_file_path.parents for s in scope):
+                        result.append(resulting_file_path)
+                    else:
+                        continue
+            except Exception as e:
+                if LOG: 
+                    logging.info(f"attribute error encoutered by parser: {e}")
+                tmp = resolve_import(i, path_of_the_analysed_file)
+                if tmp is not None: 
+                    result.append(tmp)
+
+
+
+    else:
+
+        plug_in_found = plugins.get(file_type)
+        if plug_in_found is not None:
+            result_pre = plugin_loader(Path(plug_in_found),
+                                   scope=scope,
+                                   solid_str_file_content=source,
+                                   file_path=path_of_the_analysed_file
+                                   )
+            if result_pre is not None:
+                result = result_pre
+            else:
+                result = []
 
     return result
     
@@ -239,7 +305,8 @@ def parse_file(file: TextDocument | Path, scope: list[str]) -> list[Path]:
 def get_cross_file_context(file: TextDocument | Path,
                           scope: list[str],
                           analysis_max_depth: int | None = None,
-                          max_string_size_char: int | None = None
+                          max_string_size_char: int | None = None,
+                          plugins: ParserPluginsDict | None = None
                           ) -> str | None:
     """ 
     This function recursivly resolves imports inside for ether analysis_max_depth or until the end. 
@@ -340,4 +407,5 @@ def get_cross_file_context(file: TextDocument | Path,
                 logging.error(f"Expetion in parser during final results reading {e}")
 
     return result_str
+
 

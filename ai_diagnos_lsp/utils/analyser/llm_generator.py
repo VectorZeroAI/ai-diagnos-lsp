@@ -6,6 +6,7 @@ from langchain_core.runnables import Runnable
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOmniproviderLLM import BasicOmniproviderLLMFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import BasicGeminiLlmFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicCerebrasLLM import BasicCerebrasLLMFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
 
 if TYPE_CHECKING:
@@ -49,6 +50,13 @@ def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
                     api_key_groq=config['api_key_groq'],
                     fallback_models_groq=config.get('fallback_models_groq')
                     )
+        elif config['use_cerebras']:
+            llm = BasicCerebrasLLMFactory(
+                    model_cerebras=config['model_cerebras'],
+                    api_key_cerebras=config['api_key_cerebras'],
+                    fallback_models_cerebras=config.get('fallback_models_cerebras')
+                    )
+
         else:
             raise ValueError("Invalid configuration recieved")
         return llm

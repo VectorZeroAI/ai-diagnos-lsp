@@ -3,6 +3,8 @@
 from typing import Any, Sequence
 from langchain_core.runnables import Runnable, RunnableWithFallbacks
 
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicCerebrasLLM import BasicCerebrasLLMFactory
+
 from .BasicGeminiLLM import BasicGeminiLlmFactory
 from .BasicOpenrouterLLM import OpenrouterLlmFactory
 from .BasicGroqLLM import BasicGroqLLMFactory
@@ -11,11 +13,14 @@ def BasicOmniproviderLLMFactory(
         model_openrouter: str,
         model_gemini: str,
         model_groq: str,
+        model_cerebras: str,
         api_key_openrouter: str,
         api_key_gemini: str,
         api_key_groq: str,
+        api_key_cerebras: str,
         fallback_models_gemini: Sequence[str] | None = None,
         fallback_models_groq: Sequence[str] | None = None,
+        fallback_models_cerebras: Sequence[str] | None = None,
         ) -> RunnableWithFallbacks[Any, Any]:
     """
     The factory function that retuns the omni provider llm.
@@ -31,6 +36,11 @@ def BasicOmniproviderLLMFactory(
         fallbacks.append(BasicGroqLLMFactory(model_groq, api_key_groq, fallback_models_groq))
     else:
         fallbacks.append(BasicGroqLLMFactory(model_groq, api_key_groq))
+
+    if fallback_models_cerebras is not None:
+        fallbacks.append(BasicCerebrasLLMFactory(model_cerebras, api_key_cerebras, fallback_models_cerebras))
+    else:
+        fallbacks.append(BasicCerebrasLLMFactory(model_cerebras, api_key_cerebras))
 
     llm = llm.with_fallbacks(fallbacks)
     return llm

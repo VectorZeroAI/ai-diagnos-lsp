@@ -15,6 +15,7 @@ Is in active development, and still not release capable. For ifi
 - **Debouncing and file size limits** – prevents excessive API calls on large files or rapid edits.
 - **Progress notifications** – optional periodic updates while the LLM is processing.
 - **Custom LSP commands** – trigger analysis, clear diagnostics, etc.
+- **omni language support** - LLM based analysis is omnilingual, the only changes that need to be done per language are the parsers, there is a nice plugin system to write yourself. ( Theres also a repo available for the parsers. TODO: Insert URL here)
 
 ## Requirements
 
@@ -68,6 +69,7 @@ The LSP accepts configuration via the `initializationOptions` field in the LSP `
 | `AnalysisSubsystem`           | `object`            | See below                                | Controls which analyses run on which events. |
 | `CrossFileAnalysis`           | `object`            | See below                                | Cross‑file analysis specific settings. |
 | `DiagnosticsSubsystem`        | `object`            | See below                                | Database and TTL settings. |
+| `plugins`        | `object`            | See below                                | Add your own parsers per language, to enable omnilang cross file diagnostics |
 
 ### AnalysisSubsystem
 
@@ -117,6 +119,13 @@ The LSP accepts configuration via the `initializationOptions` field in the LSP `
 - `ttl_until_invalidation`: seconds after a file write before old diagnostics are considered stale and deleted.
 
 > **Note**: Only **one** of `use_gemini`, `use_openrouter`, `use_groq`, or `use_omniprovider` should be `true` at a time. The Omniprovider is the default and requires all three API keys (they can be empty strings to skip that provider).
+
+### plugins
+
+Currently it is basically a dict of file extension (e.g. ".py") and paths to the parsers.
+I dont think I need a table to explain that. 
+
+For info on how to write one, look in the parser protocol section under Contribution. 
 
 ## Architecture
 
@@ -173,6 +182,35 @@ Common issues:
 Contributions are welcome - especially new parsers
 I will be creating a repo as a way to distribute the plugin parsers.
 TODO : Dont forget to add the repo here. 
+
+### Parser Protocol
+
+In this section, I will explain the protocol I have designed for the plugin parsers. 
+
+A plugin parser is a single executable that acts as a parser function, that gets the file in, and returns the list of files that the file import back.
+Limited to the project scope defined in the request. 
+
+Communication happends over stdin / out. 
+
+input: 
+```json
+{
+    "project_scope": ["dir_name", "anouther_dir_name", "..."],
+    "file_content": ["line_content", "anouther_line_content", "..."],
+    "solid_file_content": "The whole file content as one string",
+    "file_path": "/file/path"
+}
+```
+
+output:
+```json
+[
+    "file_imported_1", "file_imported_2", "file_imported_3"
+]
+```
+
+> [!NOTE]
+> stdin is not the same as args field as far as I know. 
 
 ## License
 

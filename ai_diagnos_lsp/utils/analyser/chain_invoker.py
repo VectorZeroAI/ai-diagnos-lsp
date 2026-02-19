@@ -29,7 +29,10 @@ else:
 
 def chain_invoker(document: TextDocument | Path, config: user_config, chain: Runnable[Any, Any], ls: AIDiagnosLSP) -> None:
     """
-    Abstracts away the copy pasta of invoking langchain
+    Abstracts away the copy pasta of invoking langchain. 
+    The smart thing is passing the chain directly in as a runnable. 
+    The idea is that aliasing means pointers, and I can alias my assembled chain to the argument, effectively 
+    passing the pointer to the function in. 
     """
     langchain_completed_event = threading.Event()
     langchain_timed_out = threading.Event()

@@ -81,7 +81,7 @@ DEFAULT_CONFIG: DefaultConfigType = {
         "max_threads": 5,
     },
     "CrossFileAnalysis": {
-        "scope": [ "Nope. Fo put that in yourself. This is here for keyerrors to not occur. " ],
+        "scope": [ "Nope. Go put that in yourself. This is here for keyerrors to not occur. " ],
         "max_analysis_depth": None,
         "max_string_size_char": 1000000
     },

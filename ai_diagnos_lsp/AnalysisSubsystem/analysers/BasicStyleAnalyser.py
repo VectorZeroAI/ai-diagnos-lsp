@@ -16,10 +16,9 @@ from ai_diagnos_lsp.utils.json_repair import optional_repair_json
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
-def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
+def BasicStyleAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
     """
-    The Analyser and diagnostics provider thread . 
-    TODO : ADD LOGGING
+    The Style Analyser worker thread
     """
 
     try:

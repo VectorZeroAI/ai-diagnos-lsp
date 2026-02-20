@@ -125,7 +125,7 @@ If a location occurs multiple times, you must specify which occurrence you mean,
 "diagnostics": [
     {
         "location": ["de grep():", 2],
-        "error_message": "misspelled def keyword inside function definition"
+        "error_message": "misspelled def keyword inside function definition",
         "severity_level": 1
     }
 ]

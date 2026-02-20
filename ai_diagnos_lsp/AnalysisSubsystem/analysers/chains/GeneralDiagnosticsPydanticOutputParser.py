@@ -12,12 +12,10 @@ class GeneralDiagnosticsPydanticObjekt(BaseModel):
         Since in my previous versions the LLM constantly fucked the raw numbers up. 
         """
 
-        location: Union[Tuple[str, int], str]
+        start: Union[Tuple[str, int], str]
+        end: Union[Tuple[str, int], str]
         error_message: str
         severity_level: int
-
-    class Config:
-        populate_by_name = True
 
     diagnostics: List[SingleDiagnostic]
 

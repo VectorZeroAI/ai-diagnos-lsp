@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicAnalysisPrompt import BasicAnalysisPromptFactory
-from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_basic, chain_invoker_function_cross_file
+from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_basic
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 
 if TYPE_CHECKING:

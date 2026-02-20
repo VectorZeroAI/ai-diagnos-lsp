@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from .prompts.style_analysis_prompts import BASIC_STYLE_ANALYSIS_PROMPT
 
-def BasicLogicAnalysisPromptFactory() -> ChatPromptTemplate:
+def BasicStyleAnalysisPromptFactory() -> ChatPromptTemplate:
     """
     This is the Prompt Objekt factory for the chain.
     I cant make it just an importable class, because if I do, 

@@ -45,7 +45,7 @@ def main():
                         ),
                     diagnostic_provider=types.DiagnosticOptions(
                         inter_file_dependencies=True,
-                        workspace_diagnostics=False, # TODO: Set to true when implemented
+                        workspace_diagnostics=True,
                         identifier="AI-diagnos-lsp"
                         )
                     )

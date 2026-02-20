@@ -188,7 +188,7 @@ class DiagnosticsHandlingSubsystemClass:
                 diagnostics_per_file[i[0]] = pydantic_objekts_list
 
             for i in diagnostics_per_file.items():
-                document = Path(unquote(urlparse(i[0]).path)).read_text()
+                document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
                 converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(self.ls, i[1], document)               
                 self.ls.diagnostics[i[0]] = (self.ls.workspace.get_text_document(i[0]).version, 
                                              converted_to_lsp_format

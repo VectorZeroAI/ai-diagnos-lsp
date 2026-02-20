@@ -16,7 +16,7 @@ class AIDiagnosLSP(LanguageServer):
     It is pull diagnostics based. 
     """
 
-    SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "Logic", "Style", "Security", "Deep"]
+    SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "BasicLogic",  "CrossFileLogic", "BasicStyle", "CrossFileStyle", "BasicSecurity", "CrossFileSecurity", "Deep"]
     # NOTE : DONT FORGET TO UPDATE THE DEFAULT CONFIG WITH THE NEW DEFINITION AFTER EACH CHANGE
 
     def __init__(self, *args, **kwargs): # pyright: ignore

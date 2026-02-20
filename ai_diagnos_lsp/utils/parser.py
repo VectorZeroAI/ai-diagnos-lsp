@@ -74,9 +74,26 @@ def path_to_dotted(path: Path) -> str:
         result = ".".join(path.relative_to(root).with_suffix("").parts)
     return result
 
+
+def parse_source_to_ast(source: str) -> ast.Module | None:
+    try:
+        return ast.parse(source)
+    except SyntaxError as e:
+        lines = source.splitlines()
+        if e.lineno is not None:
+            lines.pop(e.lineno)
+            return parse_source_to_ast("\n".join(lines))
+        else:
+            return None
+
+
+
 def parse_source(source: str) -> tuple[list[str], list[dict[Literal["name", "level", "module"], Any]]]:
     """ Parse python source code and extract import statements from it """
-    tree = ast.parse(source)
+    tree = parse_source_to_ast(source)
+    if tree is None:
+        return ([], [])
+
     imports: list[str] = []
     from_imports: list[dict[Literal["name", "level", "module"], Any]] = []
 

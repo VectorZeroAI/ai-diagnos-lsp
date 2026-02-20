@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-The default config, which will get partially or fully overwritten by the user config. 
+The default config, wich will get partially or fully overwritten by the user config. 
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsSubsyste
 LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "BasicSecurity", "CrossFileSecurity", "Deep", "Workspace"]
     
 
-class DefaultConfigType(TypedDict):
+class __DefaultConfigType(TypedDict):
     
     timeout: int | float
     debounce_ms: int | float
@@ -25,20 +25,20 @@ class DefaultConfigType(TypedDict):
 
     use_omniprovider: bool
 
-    use_cerebras: bool
-    model_cerebras: str
-    fallback_models_cerebras: list[str] | None
-
     use_gemini: bool
     model_gemini: str
-    fallback_models_gemini: list[str] | None
+    fallback_models_gemini: list[str]
 
     use_openrouter: bool
     model_openrouter: str
 
     use_groq: bool
     model_groq: str
-    fallback_models_groq: list[str] | None
+    fallback_models_groq: list[str]
+
+    use_cerebras: bool
+    model_cerebras: str
+    fallback_models_cerebras: list[str]
 
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig
@@ -47,13 +47,13 @@ class DefaultConfigType(TypedDict):
     plugins: dict[str, str]
 
 
-class user_config(DefaultConfigType):
+class user_config(__DefaultConfigType):
     api_key_gemini: str
     api_key_openrouter: str
     api_key_groq: str
     api_key_cerebras: str
 
-DEFAULT_CONFIG: DefaultConfigType = {
+DEFAULT_CONFIG: user_config = {
     "timeout": 99999,
     "debounce_ms": 3000,
     "max_file_size": 10000,
@@ -78,21 +78,21 @@ DEFAULT_CONFIG: DefaultConfigType = {
         "openai/gpt-oss-20b", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b", "llama-3.3-70b-versatile"
     ], # AI diagnos lsp: This groq configuration was tested and proved to be functional. 
 
-    "use_cerebras": False,
-    "model_cerebras": "gpt-oss-120b",
-    "fallback_models_cerebras": None,
+    "use_cerebras": True,
+    "model_cerebras":  "openai/gpt-oss-120b",
+    "fallback_models_cerebras": [ ],
 
     "AnalysisSubsystem": {
-        "write": [ "CrossFile", "Basic", "BasicLogic", "CrossFileLogic", "CrossFileStyle"],   # Analysis subsystem class is a Typed dict, e.g. a plain dict of right values is also it. 
-        "open": [ "CrossFile", "Basic", "BasicLogic", "CrossFileLogic", "CrossFileStyle" ],
+        "write": ["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle"], 
+        "open": ["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle"],
         "change": [ ],
         "command": [ "CrossFile" ],
         "max_threads": 5,
     },
     "CrossFileAnalysis": {
-        "scope": [ "~" ],     # This is like the only example that actually makes sense
+        "scope": [ "~" ],
         "max_analysis_depth": None,
-        "max_string_size_char": 50000     # That is reasonable, as that would totaly remove the 413 errors. 
+        "max_string_size_char": 1000000
     },
     "DiagnosticsSubsystem": {
         "check_ttl_for_deletion": 360,
@@ -103,5 +103,10 @@ DEFAULT_CONFIG: DefaultConfigType = {
     },
     "plugins": {
         ".py": "/the/example/path/for/ya/to/see/how/this/works"
-    }
+    },
+    'api_key_gemini': "",
+    'api_key_groq': "",
+    "api_key_openrouter": "",
+    'api_key_cerebras': ""
+
 }

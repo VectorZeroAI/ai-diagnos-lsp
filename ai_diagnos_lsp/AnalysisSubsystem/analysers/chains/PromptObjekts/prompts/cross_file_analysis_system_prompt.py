@@ -91,34 +91,6 @@ Another example of an expected valid JSON:
 ]
 }
 
-BAD ANSWER EXAMPLE: 
-```json
-{
-"diagnostics": [
-    {
-        "location": "lol",
-        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-        "severity_level": 1
-    }
-]
-
-}
-```
-REASON WHY BAD: Prefixing and ending with ``` . INCLUDING ``` IS NOT ALLOWED.
-
-ANOTHER BAD ANSWER EXAMPLE: 
-{
-"diagnostics": [
-    {
-        "location": "&quot lol &quot",
-        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-        "severity_level": 1
-    }
-]
-
-}
-REASON WHY BAD: Usage of &quot . USAGE OF &quot or any other prefixing / suffixing pattern outside JSON IS NOT ALLOWED. 
-
 -------------
 
 If a location occurs multiple times, you must specify which occurrence you mean, like this: 
@@ -132,4 +104,8 @@ If a location occurs multiple times, you must specify which occurrence you mean,
 ]
 }
 This example means the second occurrence of the "de grep():" pattern inside the code file. 
+
+-------------- 
+
+If you don't find any issues, and don't have any suggestions, output an empty diagnostics list.
 """

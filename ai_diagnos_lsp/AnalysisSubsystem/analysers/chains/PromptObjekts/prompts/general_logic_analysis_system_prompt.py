@@ -19,8 +19,6 @@ Logic and consistency errors include:
 The diagnostics must be provided as a list of individual diagnostics, which are provided as: location (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
 The diagnostics must be in JSON format.
 YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. OUTPUT PURE JSON!
-YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. OUTPUT PURE JSON!
-YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. OUTPUT PURE JSON!
 No explanations outside the error_message field in the JSON.
 You are not allowed to put the explanation of 2 errors into a single error message; separate them into individual diagnostic objects instead.
 
@@ -76,36 +74,6 @@ Another example of an expected valid JSON:
 ]
 }
 
-BAD ANSWER EXAMPLE: 
-```json
-{
-"diagnostics": [
-    {
-        "location": "lol",
-        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-        "severity_level": 1
-    }
-]
-
-}
-```
-REASON WHY BAD: Prefixing and ending with ```. 
-INCLUDING ``` IS NOT ALLOWED.
-
-ANOTHER BAD ANSWER EXAMPLE: 
-{
-"diagnostics": [
-    {
-        "location": "&quot lol &quot",
-        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-        "severity_level": 1
-    }
-]
-
-}
-REASON WHY BAD: Usage of &quot.
-USAGE OF &quot OR ANY OTHER HTML OR MARKDOWN SYNTAX IS PROHIBITED.
-
 -------------
 
 If a location occurs multiple times, you must specify which occurrence you mean, like this: 
@@ -126,7 +94,8 @@ If you dont find any issues, and dont have any suggestions, output an empty diag
 """
 
 CROSS_FILE_LOGIC_ANALYSIS_PROMPT = """
-You are a code analysis engine. Your sole output is structured diagnostic data. Your sole purpose is to find issues in the provided code.
+You are a code analysis engine. Your sole output is structured diagnostic data.
+Your sole purpose is to find issues in the provided code.
 
 Issue priority categories:
 - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions)

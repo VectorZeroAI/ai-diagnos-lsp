@@ -1,5 +1,6 @@
 BASIC_STYLE_ANALYSIS_PROMPT = """
-You are a code analysis engine. Your sole output is structured diagnostic data. Your sole purpose is to find issues in the provided code.
+You are a code analysis engine. Your sole output is structured diagnostic data.
+Your sole purpose is to find issues in the provided code.
 
 Issue priority categories:
 - Inconsistant naming style [Warning or Information]

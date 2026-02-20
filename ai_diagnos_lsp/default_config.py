@@ -83,16 +83,16 @@ DEFAULT_CONFIG: DefaultConfigType = {
     "fallback_models_cerebras": None,
 
     "AnalysisSubsystem": {
-        "write": [ "CrossFile", "Basic" ],
-        "open": [ "Basic", "CrossFile" ],
+        "write": [ "CrossFile", "Basic", "BasicLogic", "CrossFileLogic", "CrossFileStyle"],   # Analysis subsystem class is a Typed dict, e.g. a plain dict of right values is also it. 
+        "open": [ "CrossFile", "Basic", "BasicLogic", "CrossFileLogic", "CrossFileStyle" ],
         "change": [ ],
         "command": [ "CrossFile" ],
         "max_threads": 5,
     },
     "CrossFileAnalysis": {
-        "scope": [ "~" ],     # Lol why not ? 
+        "scope": [ "~" ],     # This is like the only example that actually makes sense
         "max_analysis_depth": None,
-        "max_string_size_char": 50000     # I think that is reasonable. 
+        "max_string_size_char": 50000     # That is reasonable, as that would totaly remove the 413 errors. 
     },
     "DiagnosticsSubsystem": {
         "check_ttl_for_deletion": 360,

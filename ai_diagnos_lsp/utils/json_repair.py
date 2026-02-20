@@ -11,7 +11,12 @@ def optional_repair_json(input_msg: AIMessage) -> AIMessage:
     if isinstance(input_msg.content, str): # pyright: ignore
         content = input_msg.content
     else:
-        content = "\n".join(input_msg.content)
+        if isinstance(input_msg.content[0], str):
+            content = "\n".join(input_msg.content)
+        elif isinstance(input_msg.content[0], dict):
+            content = "\n".join(s['text'] for s in input_msg.content if 'text' in s)
+        else:
+            return input_msg
     
     if can_parse_json(content):
         return input_msg

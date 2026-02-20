@@ -7,16 +7,29 @@ Issue priority categories:
 - Consistency errors (variable naming conflicts, type mismatches, contradictory state)
 
 Logic and consistency errors include:
-- Contradictory conditions (if x > 5 and x < 3)
-- Unreachable code paths
-- Type inconsistencies
-- Off-by-one errors in loops
-- Infinite loops or missing break conditions
-- Dead code that can never execute
-- Inconsistent return types
-- Missing null/undefined checks
+- Contradictory conditions (if x > 5 and x < 3) [Error]
+- Unreachable code paths [Warning or Error]
+- Variables used before initialization [Error]
+- Type inconsistencies [Error or Warning]
+- Off-by-one errors in loops [Error]
+- Infinite loops or missing break conditions [Warning]
+- Dead code that can never execute [Warning or Information]
+- Inconsistent return types [Warning]
+- Missing null/undefined checks [Warning]
+- Unsafe memory access [Warning]
 
-The diagnostics must be provided as a list of individual diagnostics, which are provided as: location (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
+Consistency errors include:
+- Inconsistant naming style [Warning or Information]
+- Conventions violations [Warning or Information]
+- Formatting issues (e.g. a line that is too long) [Information or Warning]
+- Missing docstings [Information]
+- Logically unreachable code [Warning]
+- Unusually long functions [Hint]
+- Unusually deep nesting [Information or Warning]
+- Inapropriate language inside comments or docstrings usage [Hint]
+- Too short docstrings [Information or Hint]
+
+The diagnostics must be provided as a list of individual diagnostics, which are provided as: start (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search); end (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
 The diagnostics must be in JSON format.
 YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. OUTPUT PURE JSON!
 No explanations outside the error_message field in the JSON.
@@ -36,12 +49,14 @@ Expected JSON example :
 {
 "diagnostics": [
     {
-        "location": "The wrong spot",
+        "start": "The small wrong spot",
+        "end": "the small wrong spot",
         "error_message": "Explanation of what is wrong there",
         "severity_level": 1
     },
     {
-        "location": "The second wrong spot",
+        "start": "A big wrong spot start",
+        "end": "A big wrong spot end",
         "error_message": "Explanation of what is wrong there",
         "severity_level": 2
     }
@@ -52,22 +67,8 @@ Another example of an expected valid JSON:
 {
 "diagnostics": [
     {
-        "location": "if a is not None and a is None:",
-        "error_message": "Contradictory condition that never evaluates to True",
-        "severity_level":1
-    },
-    {
-        "location": "if None != None:",
-        "error_message": "Impossible condition causing dead code",
-        "severity_level":1
-    }
-]
-}
-Another example of an expected valid JSON: 
-{
-"diagnostics": [
-    {
-        "location": "if (x > 10 && x < 5)",
+        "start": "if (x > 10 && x < 5)",
+        "end": "if x(x > 10 && y < 5)",
         "error_message": "Logic error: condition can never be true (x cannot be simultaneously greater than 10 and less than 5)",
         "severity_level": 1
     }
@@ -77,16 +78,20 @@ Another example of an expected valid JSON:
 -------------
 
 If a location occurs multiple times, you must specify which occurrence you mean, like this: 
+
 {
 "diagnostics": [
     {
-        "location": ["de grep():", 2],
+        "start": ["de grep():", 2],
+        "end": ["de grep():", 2],
         "error_message": "misspelled def keyword inside function definition",
         "severity_level": 1
     }
 ]
 }
+
 This example means the second occurrence of the "de grep():" pattern inside the code file. 
+If all of the occurances of a pattern are errors, output a separate diagnostic for each individual one.
 
 -------------- 
 
@@ -102,16 +107,29 @@ Issue priority categories:
 - Consistency errors (variable naming conflicts, type mismatches, contradictory state)
 
 Logic and consistency errors include:
-- Contradictory conditions (if x > 5 and x < 3)
-- Unreachable code paths
-- Type inconsistencies
-- Off-by-one errors in loops
-- Infinite loops or missing break conditions
-- Dead code that can never execute
-- Inconsistent return types
-- Missing null/undefined checks
+- Contradictory conditions (if x > 5 and x < 3) [Error]
+- Unreachable code paths [Warning or Error]
+- Variables used before initialization [Error]
+- Type inconsistencies [Error or Warning]
+- Off-by-one errors in loops [Error]
+- Infinite loops or missing break conditions [Warning]
+- Dead code that can never execute [Warning or Information]
+- Inconsistent return types [Warning]
+- Missing null/undefined checks [Warning]
+- Unsafe memory access [Warning]
 
-The diagnostics must be provided as a list of individual diagnostics, which are provided as: location (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
+Consistency errors include:
+- Inconsistant naming style [Warning or Information]
+- Conventions violations [Warning or Information]
+- Formatting issues (e.g. a line that is too long) [Information or Warning]
+- Missing docstings [Information]
+- Logically unreachable code [Warning]
+- Unusually long functions [Hint]
+- Unusually deep nesting [Information or Warning]
+- Inapropriate language inside comments or docstrings usage [Hint]
+- Too short docstrings [Information or Hint]
+
+The diagnostics must be provided as a list of individual diagnostics, which are provided as: start (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search); end (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
 The diagnostics must be in JSON format.
 YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. OUTPUT PURE JSON!
 No explanations outside the error_message field in the JSON.
@@ -131,12 +149,14 @@ Expected JSON example :
 {
 "diagnostics": [
     {
-        "location": "The wrong spot",
+        "start": "The small wrong spot",
+        "end": "the small wrong spot",
         "error_message": "Explanation of what is wrong there",
         "severity_level": 1
     },
     {
-        "location": "The second wrong spot",
+        "start": "A big wrong spot start",
+        "end": "A big wrong spot end",
         "error_message": "Explanation of what is wrong there",
         "severity_level": 2
     }
@@ -147,22 +167,8 @@ Another example of an expected valid JSON:
 {
 "diagnostics": [
     {
-        "location": "if a is not None and a is None:",
-        "error_message": "Contradictory condition that never evaluates to True",
-        "severity_level":1
-    },
-    {
-        "location": "if None != None:",
-        "error_message": "Impossible condition causing dead code",
-        "severity_level":1
-    }
-]
-}
-Another example of an expected valid JSON: 
-{
-"diagnostics": [
-    {
-        "location": "if (x > 10 && x < 5)",
+        "start": "if (x > 10 && x < 5)",
+        "end": "if x(x > 10 && y < 5)",
         "error_message": "Logic error: condition can never be true (x cannot be simultaneously greater than 10 and less than 5)",
         "severity_level": 1
     }
@@ -172,16 +178,21 @@ Another example of an expected valid JSON:
 -------------
 
 If a location occurs multiple times, you must specify which occurrence you mean, like this: 
+
 {
 "diagnostics": [
     {
-        "location": ["de grep():", 2],
+        "start": ["de grep():", 2],
+        "end": ["de grep():", 2],
         "error_message": "misspelled def keyword inside function definition",
         "severity_level": 1
     }
 ]
 }
+
 This example means the second occurrence of the "de grep():" pattern inside the code file. 
+If all of the occurances of a pattern are errors, output a separate diagnostic for each individual one.
+
 
 -------------
 

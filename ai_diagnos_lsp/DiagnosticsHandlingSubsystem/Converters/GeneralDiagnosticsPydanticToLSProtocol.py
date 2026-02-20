@@ -82,7 +82,7 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                 continue 
 
             if os.getenv("AI_DIAGNOS_LOG") is not None:
-                logging.info(f"DIAGNOSTIC : error message:  {j.error_message} ; severity level : {j.severity_level} ; pos line : {pos_line} ; pos char :  {pos_char}")
+                logging.info(f"DIAGNOSTIC : error message:  {j.error_message} ; severity level : {j.severity_level} ; pos line start : {pos_line_start} ; pos char start :  {pos_char_start} ; pos line end {pos_line_end}, ; pos char end : {pos_char_end}")
 
             severity_level_converted = severity_map.get(j.severity_level)
 

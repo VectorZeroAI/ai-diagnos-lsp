@@ -37,24 +37,41 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.info("searching the file with grep.")
                     if isinstance(document, TextDocument):
-                        logging.info(f"searching for : {j.location} ; in {document.uri}")
+                        logging.info(f"searching for start : {j.start} ; in {document.uri}")
+                        logging.info(f"searching for end : {j.end} ; in {document.uri}")
                     else:
-                        logging.info(f"searching for : {j.location} ; in {document}")
+                        logging.info(f"searching for start : {j.start} ; in {document}")
+                        logging.info(f"searching for end : {j.end} ; in {document}")
                 
-                if isinstance(j.location, Tuple):
+                if isinstance(j.start, Tuple):
                     if isinstance(document, TextDocument):
-                        pos = grep(j.location[0], document.source)[j.location[1] - 1]
+                        pos_start = grep(j.start[0], document.source)[j.start[1] - 1]
                     else:
-                        pos = grep(j.location[0], document)[j.location[1] - 1]
+                        pos_start = grep(j.start[0], document)[j.start[1] - 1]
                 else:
                     if isinstance(document, TextDocument):
-                        pos = grep(j.location, document.source)[0]
+                        pos_start = grep(j.start, document.source)[0]
                     else:
-                        pos = grep(j.location, document)[0]
-                pos_line = pos[0]
-                pos_char = pos[1]
+                        pos_start = grep(j.start, document)[0]
+
+                if isinstance(j.end, Tuple):
+                    if isinstance(document, TextDocument):
+                        pos_end = grep(j.end[0], document.source)[j.end[1] - 1]
+                    else:
+                        pos_end = grep(j.end[0], document)[j.end[1] - 1]
+                else:
+                    if isinstance(document, TextDocument):
+                        pos_end = grep(j.end, document.source)[0]
+                    else:
+                        pos_end = grep(j.end, document)[0]
+                    
+                pos_line_start = pos_start[0]
+                pos_char_start = pos_start[1]
+                pos_line_end = pos_end[0]
+                pos_char_end = pos_end[1]
+
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
-                    logging.info(f"found {j.location} at line : {pos_line}, char : {pos_char}")
+                    logging.info(f"found {j.start} at line : {pos_line_start}, char : {pos_char_start}")
             except IndexError as e:
                 # Ignore the diagnostic entirely, because if no matches were found, it means that the AI
                 # halucinated, wich makes this one specific diagnostic is wrong, wich is not worth the hassle
@@ -74,8 +91,8 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                         message=j.error_message,
                         severity=severity_level_converted,
                         range=types.Range(
-                            start=types.Position(pos_line, pos_char),
-                            end=types.Position(pos_line, pos_char)
+                            start=types.Position(pos_line_start, pos_char_start),
+                            end=types.Position(pos_line_end, pos_char_end)
                             ), 
                         source="AI diagnos LSP", data="AI",code="AI",
                         code_description=types.CodeDescription("This is AI generated Diagnostics. I am putting this wherever I can because why not ?")

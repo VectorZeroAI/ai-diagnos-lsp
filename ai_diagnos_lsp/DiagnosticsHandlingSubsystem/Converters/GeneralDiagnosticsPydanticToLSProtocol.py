@@ -26,7 +26,8 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                                            document: TextDocument | str
                                            ) -> List[types.Diagnostic]:
     """
-
+    Converts General Diagnostics Pydantic Objekt to a list of lsprotocol.types.diagnostic
+    requires the document due to the grep usage and location semantic matching
     """
     diagnostics_converted_list = []
 

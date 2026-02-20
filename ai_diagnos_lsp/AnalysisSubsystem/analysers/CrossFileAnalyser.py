@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, TypedDict
 from pathlib import Path
 import os
 import logging
+from langchain_core.runnables import RunnableLambda
 
 from pygls.workspace import TextDocument
 
@@ -18,6 +19,7 @@ from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 
 from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromptFactory
 
+from ai_diagnos_lsp.utils.json_repair import optional_repair_json
 
 
 if TYPE_CHECKING:
@@ -58,9 +60,11 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         prompt = CrossFileAnalysisPromptFactory()
 
+        repairs = RunnableLambda(optional_repair_json)
+
         output_parser = GeneralDiagnosticsOutputParserFactory()
 
-        chain = prompt | llm | output_parser
+        chain = prompt | llm | repairs | output_parser
 
         chain_invoker_function_cross_file(
                 document=file,

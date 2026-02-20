@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from langchain_core.runnables import RunnableLambda
 from lsprotocol import types
 from pygls.workspace import TextDocument
 from pathlib import Path
@@ -10,6 +11,7 @@ from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanti
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicLogicAnalysisPrompt import BasicLogicAnalysisPromptFactory
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_basic
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
+from ai_diagnos_lsp.utils.json_repair import optional_repair_json
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
@@ -26,9 +28,11 @@ def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
         
         prompt = BasicLogicAnalysisPromptFactory()
 
+        repairs = RunnableLambda(optional_repair_json)
+
         output =  GeneralDiagnosticsOutputParserFactory()
 
-        chain = prompt | llm | output
+        chain = prompt | llm | repairs |output
         
 
         chain_invoker_function_basic(

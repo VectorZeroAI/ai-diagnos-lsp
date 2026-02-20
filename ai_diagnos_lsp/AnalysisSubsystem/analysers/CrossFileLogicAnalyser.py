@@ -9,12 +9,14 @@ from typing import TYPE_CHECKING, TypedDict
 from pathlib import Path
 import os
 import logging
+from langchain_core.runnables import RunnableLambda
 
 from pygls.workspace import TextDocument
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_cross_file
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
+from ai_diagnos_lsp.utils.json_repair import optional_repair_json
 
 from .chains.PromptObjekts.CrossFileLogicAnalysisPrompt import CrossFileLogicAnalysisPromptFactory
 
@@ -56,9 +58,11 @@ def CrossFileLogicAnalyser(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         llm = LlmFactoryWithConfig(ls.config)
 
+        repairs = RunnableLambda(optional_repair_json)
+
         output_parser = GeneralDiagnosticsOutputParserFactory()
 
-        chain = prompt | llm | output_parser
+        chain = prompt | llm | repairs | output_parser
 
         if LOG:
             logging.info("chain initialized")

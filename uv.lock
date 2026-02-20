@@ -10,6 +10,7 @@ name = "ai-lsp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "fix-busted-json" },
     { name = "langchain" },
     { name = "langchain-cerebras" },
     { name = "langchain-google-genai" },
@@ -20,6 +21,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fix-busted-json", specifier = ">=0.0.7" },
     { name = "langchain", specifier = ">=1.2.9" },
     { name = "langchain-cerebras", specifier = ">=0.7.0" },
     { name = "langchain-google-genai", extras = ["standart"], specifier = ">=4.2.0" },
@@ -273,6 +275,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bb/29/745f7d30d47fe0f251d3ad3dc2978a23141917661998763bebb6da007eb1/filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb", size = 998020, upload-time = "2022-11-02T17:34:04.141Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25", size = 19970, upload-time = "2022-11-02T17:34:01.425Z" },
+]
+
+[[package]]
+name = "fix-busted-json"
+version = "0.0.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/50/0304b348c0886e1afec5b7728ea77f20d7b1f337e544b59d306678bd1701/fix-busted-json-0.0.7.tar.gz", hash = "sha256:c402699526991a5892b74ac96124b0dd745a3a485d079a2dd9925ee1a3c9ed23", size = 7320, upload-time = "2023-06-18T12:18:12.796Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/4e/730c1634d0036813012ae54c68a295fac6ddaffcecad2e98d421e6dbe742/fix_busted_json-0.0.7-py3-none-any.whl", hash = "sha256:aa18b3d681fb94e3bb4b483f494fe493c439d368ee2f85ca6b55da83d6d88208", size = 5093, upload-time = "2023-06-18T12:18:11.43Z" },
 ]
 
 [[package]]

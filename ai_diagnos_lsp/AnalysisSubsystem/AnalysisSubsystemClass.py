@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, TypedDict
-
 from pygls.workspace import TextDocument
-
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 import time
@@ -12,19 +11,23 @@ import logging
 import os
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileLogicAnalyser import CrossFileLogicAnalyser
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalyserWorkerThread
+from .analysers.BasicLogicAnalyser import BasicLogicAnalyserWorker
+from .analysers.BasicStyleAnalyser import BasicStyleAnalyserWorker
+from .analysers.CrossFileStyleAnalyser import CrossFileStyleAnalyserWorker
+
+if TYPE_CHECKING:
+    from ai_diagnos_lsp.default_config import LiteralSupportedAnalysisTypes
+    from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
 if os.getenv("AI_DIAGNOS_LOG") is not None:
     log = True
 else:
     log = False
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.BasicDiagnoseFunction import BasicDiagnoseFunctionWorker
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalyserWorkerThread
-from .analysers.BasicLogicAnalyser import BasicLogicAnalyserWorker
 
-if TYPE_CHECKING:
-    from ai_diagnos_lsp.default_config import LiteralSupportedAnalysisTypes
-    from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
+
 
 class AnalysisSubsystemConfig(TypedDict):
     write: list[LiteralSupportedAnalysisTypes]
@@ -32,6 +35,8 @@ class AnalysisSubsystemConfig(TypedDict):
     change: list[LiteralSupportedAnalysisTypes]
     command: list[LiteralSupportedAnalysisTypes]
     max_threads: int
+
+
 
 class AnalysisSubsystem:
     """
@@ -133,7 +138,6 @@ class AnalysisSubsystem:
                         # TODO : Implement a configuration option for "at debounce do".
                         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
 
-
                 if "CrossFile" in self.ls.config["AnalysisSubsystem"][event]:
                     if time.time() - self.last_analysed_at["CrossFile"][uri] > self.ls.config["debounce_ms"] / 1000:
                         self.submited_analyses["CrossFile"][uri] = self.executor.submit(CrossFileAnalyserWorkerThread, self.ls, doc)
@@ -144,7 +148,7 @@ class AnalysisSubsystem:
 
                 if "BasicLogic" in self.ls.config["AnalysisSubsystem"][event]:
                     if time.time() - self.last_analysed_at["BasicLogic"][uri] > self.ls.config["debounce_ms"] / 1000:
-                        self.submited_analyses["BasicLogic"][uri] = self.executor.submit(BasicLogicAnalyserWorker, self.ls, doc)
+                        self.submited_analyses["BasicLogic"][uri] = self.executor.submit(BasicLogicAnalyserWorker, doc, self.ls)
                         self.last_analysed_at["BasicLogic"][uri] = time.time()
                     else:
                         # TODO : Implement a configuration option for "at debounce do".
@@ -154,6 +158,22 @@ class AnalysisSubsystem:
                     if time.time() - self.last_analysed_at["CrossFileLogic"][uri] > self.ls.config["debounce_ms"] / 1000:
                         self.submited_analyses["CrossFileLogic"][uri] = self.executor.submit(CrossFileLogicAnalyser, self.ls, doc)
                         self.last_analysed_at["CrossFileLogic"][uri] = time.time()
+                    else:
+                        # TODO : Implement a configuration option for "at debounce do".
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+
+                if "CrossFileStyle" in self.ls.config["AnalysisSubsystem"][event]:
+                    if time.time() - self.last_analysed_at["CrossFileStyle"][uri] > self.ls.config["debounce_ms"] / 1000:
+                        self.submited_analyses["CrossFileStyle"][uri] = self.executor.submit(CrossFileStyleAnalyserWorker, doc, self.ls)
+                        self.last_analysed_at["CrossFileStyle"][uri] = time.time()
+                    else:
+                        # TODO : Implement a configuration option for "at debounce do".
+                        self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))
+
+                if "BasicStyle" in self.ls.config["AnalysisSubsystem"][event]:
+                    if time.time() - self.last_analysed_at["BasicStyle"][uri] > self.ls.config["debounce_ms"] / 1000:
+                        self.submited_analyses["BasicStyle"][uri] = self.executor.submit(BasicStyleAnalyserWorker, doc, self.ls)
+                        self.last_analysed_at["BasicStyle"][uri] = time.time()
                     else:
                         # TODO : Implement a configuration option for "at debounce do".
                         self.ls.window_show_message(types.ShowMessageParams(types.MessageType(2), "Debounced the analysis !"))

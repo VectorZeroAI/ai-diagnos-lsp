@@ -27,18 +27,18 @@ class __DefaultConfigType(TypedDict):
 
     use_gemini: bool
     model_gemini: str
-    fallback_models_gemini: list[str]
+    fallback_models_gemini: list[str] | None
 
     use_openrouter: bool
     model_openrouter: str
 
     use_groq: bool
     model_groq: str
-    fallback_models_groq: list[str]
+    fallback_models_groq: list[str] | None
 
     use_cerebras: bool
     model_cerebras: str
-    fallback_models_cerebras: list[str]
+    fallback_models_cerebras: list[str] | None
 
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig

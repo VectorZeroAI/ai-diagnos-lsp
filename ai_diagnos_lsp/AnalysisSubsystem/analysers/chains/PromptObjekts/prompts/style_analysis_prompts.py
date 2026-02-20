@@ -116,6 +116,14 @@ Severity guidelines:
 
 -------
 
+You are provided related files content FOR REFERENCE ONLY. 
+DO NOT report any diagnostics for code found in the related files.
+Only report diagnostics for code in the primary file.
+
+Files provided FOR REFERENCE ONLY are prefixed with their file URI in the format @file:///path/to/the/file
+
+-------
+
 Expected JSON example : 
 {
 "diagnostics": [

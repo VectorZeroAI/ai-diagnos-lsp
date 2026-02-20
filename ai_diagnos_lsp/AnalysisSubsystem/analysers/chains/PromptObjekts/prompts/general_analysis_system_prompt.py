@@ -22,8 +22,6 @@ Logic and consistency errors include:
 The diagnostics must be provided as a list of individual diagnostics, which are provided as: location (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
 The diagnostics must be in JSON format.
 YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
-YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
-YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
 You are not allowed to output anything other than the expected JSON. 
 No explanations outside the error_message field in the JSON.
 You are not allowed to put the explanation of 2 errors into a single error message; separate them into individual diagnostic objects instead.
@@ -80,34 +78,6 @@ Another example of an expected valid JSON:
 ]
 }
 
-BAD ANSWER EXAMPLE: 
-```json
-{
-"diagnostics": [
-    {
-        "location": "lol",
-        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-        "severity_level": 1
-    }
-]
-
-}
-```
-REASON WHY BAD: Prefixing and ending with ``` . INCLUDING ``` IS NOT ALLOWED.
-
-ANOTHER BAD ANSWER EXAMPLE: 
-{
-"diagnostics": [
-    {
-        "location": "&quot lol &quot",
-        "error_message": "Invalid syntax, lol is not a valid keyword, nor a defined variable name",
-        "severity_level": 1
-    }
-]
-
-}
-REASON WHY BAD: Usage of &quot. USAGE OF &quot or any other prefixing / suffixing pattern outside JSON IS NOT ALLOWED. 
-
 -------------
 
 If a location occurs multiple times, you must specify which occurrence you mean, like this: 
@@ -122,4 +92,7 @@ If a location occurs multiple times, you must specify which occurrence you mean,
 }
 This example means the second occurrence of the "de grep():" pattern inside the code file. 
 
+------------ 
+
+If you dont find any issues, you should output an empty diagnostics array
 """

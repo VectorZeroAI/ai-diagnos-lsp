@@ -90,9 +90,9 @@ DEFAULT_CONFIG: DefaultConfigType = {
         "max_threads": 5,
     },
     "CrossFileAnalysis": {
-        "scope": [ "Nope. Go put that in yourself. This is here for keyerrors to not occur. " ],
+        "scope": [ "~" ],     # Lol why not ? 
         "max_analysis_depth": None,
-        "max_string_size_char": 1000000
+        "max_string_size_char": 50000     # I think that is reasonable. 
     },
     "DiagnosticsSubsystem": {
         "check_ttl_for_deletion": 360,

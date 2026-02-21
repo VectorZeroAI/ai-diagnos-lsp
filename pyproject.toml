@@ -10,6 +10,7 @@ dependencies = [
     "langchain-cerebras>=0.7.0",
     "langchain-google-genai[standart]>=4.2.0",
     "langchain-groq>=1.0.0",
+    "langchain-huggingface>=1.0.0",
     "langchain-openai>=1.1.7",
     "pygls>=2.0.1",
 ]
@@ -23,6 +24,7 @@ cache-dir = ".uv-cache"
 no-cache = false
 concurrent-builds = 1
 package = true
+no-binary = ["hf-xet"]
 
 [tool.pyright]
 typeCheckingMode = "strict"

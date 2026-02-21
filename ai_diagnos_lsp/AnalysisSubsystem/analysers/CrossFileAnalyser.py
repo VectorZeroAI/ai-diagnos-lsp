@@ -20,7 +20,7 @@ from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromptFactory
 
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
-from ai_diagnos_lsp.utils.strip_scratchpad import stript_scratchpad
+from ai_diagnos_lsp.utils.strip_scratchpad import strip_scratchpad
 
 
 if TYPE_CHECKING:
@@ -63,7 +63,7 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         repairs = RunnableLambda(optional_repair_json)
 
-        strip_think = RunnableLambda(stript_scratchpad)
+        strip_think = RunnableLambda(strip_scratchpad)
         output_parser = GeneralDiagnosticsOutputParserFactory()
 
         chain = prompt | llm | strip_think | repairs | output_parser

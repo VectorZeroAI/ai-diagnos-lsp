@@ -46,15 +46,16 @@ def optional_repair_json(input_msg: AIMessage) -> AIMessage:
         if is_valid_json(content):
             return input_msg
         else:
-            if content.startswith('´´´json') and content.endswith('´´´'):
-                content = content[6:-3]
+            if content.startswith('```json') and content.endswith('```'):
+                content = content[7:-3]
                 # If content is enclosed in markdown codeblock, remove the codeblock. 
+                # Newlines dont make json invalid, do they ? I dont think so. If they do, why dont I just strip all of them and thats it ? 
             elif content.startswith('~~~json') and content.endswith('~~~'):
-                content = content[6:-3]
+                content = content[7:-3]
                 # Also handle this kind of codeblocks
 
             try:
-                repaired_content = repair_json(content, True) # pyright: ignore
+                repaired_content = repair_json(content) # pyright: ignore
                 if isinstance(repaired_content, (dict, list)):
                     return AIMessage(content=repaired_content) # pyright: ignore
                 else:

@@ -122,6 +122,7 @@ GOOD EXAMPLE:
 
 BAD EXAMPLE:
 {}
+
 --------
 
 You must encapsulate your thoughts into an <think><think/> fences.

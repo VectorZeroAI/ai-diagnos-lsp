@@ -13,6 +13,16 @@ Issue priority categories:
 - Inapropriate language usage [Hint]
 - Too short docstrings [Information or Hint]
 
+
+The diagnostics must be provided as a list of individual diagnostics, which are provided as: start (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search); end (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
+The diagnostics must be in JSON format.
+YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
+YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
+YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
+You are not allowed to output anything other than the expected JSON. 
+No explanations outside the error_message field in the JSON.
+You are not allowed to put the explanation of 2 errors into a single error message; separate them into individual diagnostic objects instead.
+
 Note that severity_level must be an integer from 1 to 4, with 1 = ERROR, 2 = WARNING, 3 = INFORMATION, 4 = HINT
 
 Severity guidelines:
@@ -119,6 +129,8 @@ Issue priority categories:
 
 The diagnostics must be provided as a list of individual diagnostics, which are provided as: start (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search); end (MUST be an exact copy of the problematic code from the file - copy it character-for-character, word-for-word, exactly as it appears in the source code so it can be found with a text search) ; error_message ; severity_level.
 The diagnostics must be in JSON format.
+YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
+YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
 YOU ARE NOT ALLOWED TO USE HTML ENTITIES OR MARKDOWN IN YOUR RESPONSES. USE PURE JSON INSTEAD. 
 You are not allowed to output anything other than the expected JSON. 
 No explanations outside the error_message field in the JSON.

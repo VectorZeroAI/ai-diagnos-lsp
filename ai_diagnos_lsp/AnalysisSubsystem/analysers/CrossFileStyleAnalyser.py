@@ -14,6 +14,7 @@ from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.CrossFileSt
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_cross_file
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
+from ai_diagnos_lsp.utils.strip_scratchpad import stript_scratchpad
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
@@ -31,9 +32,11 @@ def CrossFileStyleAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP
 
         repairs = RunnableLambda(optional_repair_json)
 
+        strip_think = RunnableLambda(stript_scratchpad)
+
         output =  GeneralDiagnosticsOutputParserFactory()
 
-        chain: Runnable[dict[Any, Any], Any] = prompt | llm | repairs | output
+        chain = prompt | llm | strip_think | repairs | output
         
 
         chain_invoker_function_cross_file(

@@ -19,7 +19,7 @@ from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
 
 from .chains.PromptObjekts.CrossFileLogicAnalysisPrompt import CrossFileLogicAnalysisPromptFactory
-
+from ai_diagnos_lsp.utils.strip_scratchpad import stript_scratchpad
 
 
 if TYPE_CHECKING:
@@ -60,9 +60,11 @@ def CrossFileLogicAnalyser(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         repairs = RunnableLambda(optional_repair_json)
 
+        strip_think = RunnableLambda(stript_scratchpad)
+
         output_parser = GeneralDiagnosticsOutputParserFactory()
 
-        chain = prompt | llm | repairs | output_parser
+        chain = prompt | llm | strip_think | repairs | output_parser
 
         if LOG:
             logging.info("chain initialized")

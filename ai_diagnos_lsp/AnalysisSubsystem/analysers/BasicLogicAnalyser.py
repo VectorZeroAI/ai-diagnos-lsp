@@ -12,6 +12,7 @@ from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicLogicA
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_basic
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
+from ai_diagnos_lsp.utils.strip_scratchpad import stript_scratchpad
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
@@ -30,9 +31,11 @@ def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
 
         repairs = RunnableLambda(optional_repair_json)
 
+        strip_think = RunnableLambda(stript_scratchpad)
+
         output =  GeneralDiagnosticsOutputParserFactory()
 
-        chain = prompt | llm | repairs |output
+        chain = prompt | llm | strip_think | repairs |output
         
 
         chain_invoker_function_basic(

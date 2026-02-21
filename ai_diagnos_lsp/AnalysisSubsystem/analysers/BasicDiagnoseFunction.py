@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicAnalysisPrompt import BasicAnalysisPromptFactory
+from ai_diagnos_lsp.utils import strip_scratchpad
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_basic
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
@@ -26,8 +27,9 @@ def BasicDiagnoseFunctionWorker(document: TextDocument | Path, ls: AIDiagnosLSP)
         output = GeneralDiagnosticsOutputParserFactory()
 
         repairs = RunnableLambda(optional_repair_json)
+        strip_think = RunnableLambda(strip_scratchpad)
 
-        chain: Runnable[Any, Any] = prompt | llm | repairs | output 
+        chain: Runnable[Any, Any] = prompt | llm | strip_think | repairs | output 
 
         chain_invoker_function_basic(document, ls.config, chain, ls, 'Basic')
 

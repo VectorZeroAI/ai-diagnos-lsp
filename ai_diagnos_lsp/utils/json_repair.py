@@ -44,22 +44,29 @@ def optional_repair_json(input_msg: AIMessage) -> AIMessage:
         
         assert isinstance(content, str)
         if is_valid_json(content):
+            if LOG:
+                logging.info(f"json repairs tool passed the input message through because it is valid. input message {content}")
             return input_msg
         else:
             if content.startswith('```json') and content.endswith('```'):
-                content = content[7:-3]
+                content = content.removeprefix('```json')
+                content = content.removesuffix('```')
+                if LOG:
+                    logging.info("json repairs tool detected and removed prefixes of markdown format ```")
                 # If content is enclosed in markdown codeblock, remove the codeblock. 
                 # Newlines dont make json invalid, do they ? I dont think so. If they do, why dont I just strip all of them and thats it ? 
             elif content.startswith('~~~json') and content.endswith('~~~'):
-                content = content[7:-3]
+                content = content.removeprefix('~~~json')
+                content = content.removesuffix('~~~')
                 # Also handle this kind of codeblocks
+                if LOG:
+                    logging.info("json repairs tool detected and removed prefixes of markdown format ~~~")
 
             try:
                 repaired_content = repair_json(content) # pyright: ignore
-                if isinstance(repaired_content, (dict, list)):
-                    return AIMessage(content=repaired_content) # pyright: ignore
-                else:
-                    return input_msg
+                if LOG:
+                    logging.info(f"content repairs were done by the repair json of repair json library. Returning the repaired content {content}")
+                return AIMessage(content=repaired_content) # pyright: ignore
             except Exception as e:
                 if LOG:
                     logging.error(f"the repair json function call encoutered the following exception {e}. Trying to remove the prefixing backtricks if some are found. ")

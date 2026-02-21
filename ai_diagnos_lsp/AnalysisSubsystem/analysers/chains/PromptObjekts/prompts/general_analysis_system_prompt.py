@@ -95,5 +95,9 @@ This example means the second occurrence of the "de grep():" pattern inside the 
 
 ------------ 
 
-If you dont find any issues, you should output an empty diagnostics array
+If you dont find any issues, output exactly this:
+
+{
+"diagnostics": []
+}
 """

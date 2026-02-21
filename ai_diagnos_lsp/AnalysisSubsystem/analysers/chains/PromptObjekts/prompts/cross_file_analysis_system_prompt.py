@@ -111,5 +111,9 @@ If all of the occurances of a pattern are errors, output a separate diagnostic f
 
 -------------- 
 
-If you don't find any issues, and don't have any suggestions, output an empty diagnostics list.
+If you dont find any issues, output exactly this:
+
+{
+"diagnostics": []
+}
 """

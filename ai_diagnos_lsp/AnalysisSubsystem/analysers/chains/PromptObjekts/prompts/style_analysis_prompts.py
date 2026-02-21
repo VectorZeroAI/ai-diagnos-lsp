@@ -81,7 +81,11 @@ If all of the occurances of a pattern are errors, output a separate diagnostic f
 
 ------------ 
 
-If you dont find any issues, you should output an empty diagnostics array
+If you dont find any issues, output exactly this:
+
+{
+"diagnostics": []
+}
 """
 
 CROSS_FILE_STYLE_ANALYSIS_PROMPT = """
@@ -175,5 +179,9 @@ If all of the occurances of a pattern are errors, output a separate diagnostic f
 
 ------------ 
 
-If you dont find any issues, you should output an empty diagnostics array
+If you dont find any issues, output exactly this:
+
+{
+"diagnostics": []
+}
 """

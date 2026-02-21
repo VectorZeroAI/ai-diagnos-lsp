@@ -95,7 +95,11 @@ If all of the occurances of a pattern are errors, output a separate diagnostic f
 
 -------------- 
 
-If you dont find any issues, and dont have any suggestions, output an empty diagnostics list. 
+If you dont find any issues, output exactly this:
+
+{
+"diagnostics": []
+}
 """
 
 CROSS_FILE_LOGIC_ANALYSIS_PROMPT = """
@@ -201,5 +205,9 @@ You are expected to reference function usage and data flow from the related file
 
 -------------
 
-If you dont find any issues, and dont have any suggestions, output an empty diagnostics list. 
+If you dont find any issues, output exactly this:
+
+{
+"diagnostics": []
+}
 """

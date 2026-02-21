@@ -75,6 +75,8 @@ DEFAULT_CONFIG: user_config = {
     "use_openrouter": False,
     "model_openrouter": "tngtech/tng-r1t-chimera:free",
 
+    "model_huggingface": "Qwen2.5-Coder-7B-Instruct",
+
     "use_groq": False,
     "model_groq": "openai/gpt-oss-120b",
     "fallback_models_groq": [
@@ -110,6 +112,7 @@ DEFAULT_CONFIG: user_config = {
     'api_key_gemini': "",
     'api_key_groq': "",
     "api_key_openrouter": "",
-    'api_key_cerebras': ""
+    'api_key_cerebras': "",
+    "api_key_huggingface": ""
 
 }

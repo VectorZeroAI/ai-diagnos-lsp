@@ -10,7 +10,7 @@ name = "ai-lsp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "fix-busted-json" },
+    { name = "json-repair" },
     { name = "langchain" },
     { name = "langchain-cerebras" },
     { name = "langchain-google-genai" },
@@ -21,7 +21,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fix-busted-json", specifier = ">=0.0.7" },
+    { name = "json-repair", specifier = ">=0.1.5" },
     { name = "langchain", specifier = ">=1.2.9" },
     { name = "langchain-cerebras", specifier = ">=0.7.0" },
     { name = "langchain-google-genai", extras = ["standart"], specifier = ">=4.2.0" },
@@ -278,15 +278,6 @@ wheels = [
 ]
 
 [[package]]
-name = "fix-busted-json"
-version = "0.0.7"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/29/50/0304b348c0886e1afec5b7728ea77f20d7b1f337e544b59d306678bd1701/fix-busted-json-0.0.7.tar.gz", hash = "sha256:c402699526991a5892b74ac96124b0dd745a3a485d079a2dd9925ee1a3c9ed23", size = 7320, upload-time = "2023-06-18T12:18:12.796Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/4e/730c1634d0036813012ae54c68a295fac6ddaffcecad2e98d421e6dbe742/fix_busted_json-0.0.7-py3-none-any.whl", hash = "sha256:aa18b3d681fb94e3bb4b483f494fe493c439d368ee2f85ca6b55da83d6d88208", size = 5093, upload-time = "2023-06-18T12:18:11.43Z" },
-]
-
-[[package]]
 name = "google-auth"
 version = "2.48.0"
 source = { registry = "https://pypi.org/simple" }
@@ -455,6 +446,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/73/a009f41c5eed71c49bec53036c4b33555afcdee70682a18c6f66e396c039/jiter-0.13.0-graalpy312-graalpy250_312_native-macosx_11_0_arm64.whl", hash = "sha256:ff732bd0a0e778f43d5009840f20b935e79087b4dc65bd36f1cd0f9b04b8ff7f", size = 303808, upload-time = "2026-02-02T12:37:52.092Z" },
     { url = "https://files.pythonhosted.org/packages/c4/10/528b439290763bff3d939268085d03382471b442f212dca4ff5f12802d43/jiter-0.13.0-graalpy312-graalpy250_312_native-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ab44b178f7981fcaea7e0a5df20e773c663d06ffda0198f1a524e91b2fde7e59", size = 337384, upload-time = "2026-02-02T12:37:53.582Z" },
     { url = "https://files.pythonhosted.org/packages/67/8a/a342b2f0251f3dac4ca17618265d93bf244a2a4d089126e81e4c1056ac50/jiter-0.13.0-graalpy312-graalpy250_312_native-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7bb00b6d26db67a05fe3e12c76edc75f32077fb51deed13822dc648fa373bc19", size = 343768, upload-time = "2026-02-02T12:37:55.055Z" },
+]
+
+[[package]]
+name = "json-repair"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/28/d1/62f7a00ec23e113fe3ec9eebec29562e7e7808cb8c1ff61fbba42a09f9ba/json_repair-0.1.5.tar.gz", hash = "sha256:7c412a33572f9fc56674346c87434fee1bf416f2a486f50aa406c6a664ecbe68", size = 4790, upload-time = "2023-09-07T12:36:55.973Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/aa/9a/0baa8eb7560e8ace56bbbaad5ff77c6b32baaf7139a88d8acd2a35ed3de4/json_repair-0.1.5-py3-none-any.whl", hash = "sha256:093ce6642fe627c3f3e22302acc6a1e328d5c7981b445c7d1c2f43d56b144bdb", size = 5123, upload-time = "2023-09-07T12:36:54.403Z" },
 ]
 
 [[package]]

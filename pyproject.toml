@@ -5,7 +5,7 @@ description = "An LSP with langchain + openrouter API as its backend."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fix-busted-json>=0.0.7",
+    "json-repair>=0.1.5",
     "langchain>=1.2.9",
     "langchain-cerebras>=0.7.0",
     "langchain-google-genai[standart]>=4.2.0",

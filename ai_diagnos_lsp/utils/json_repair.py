@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-from fix_busted_json import repair_json, can_parse_json # pyright: ignore
+from fix_busted_json import json_matching
+from json_repair import repair_json  # pyright: ignore
 from langchain_core.messages import AIMessage
 
 import os
 import logging
+import json
 
 
 """
@@ -17,6 +19,14 @@ if os.getenv('AI_DIAGNOS_LOG') is not None:
     LOG = True
 else:
     LOG = False # pyright: ignore
+
+
+def is_valid_json(json_in: str) -> bool:
+    try:
+        json.loads(json_in)
+        return True
+    except json.JSONDecodeError:
+        return False
 
 def optional_repair_json(input_msg: AIMessage) -> AIMessage:
     """
@@ -54,17 +64,18 @@ def optional_repair_json(input_msg: AIMessage) -> AIMessage:
                 return input_msg
         
         assert isinstance(content, str)
-        if can_parse_json(content):
+        if is_valid_json(content):
             return input_msg
         else:
             if content.startswith('`'):
-                content = content.strip('`')
+                content = content[3:-3]
+                # Slice the 3 prefixing and 3 ending backtricks out. 
             if content.startswith('json'):
                 content = content[4:]
             try:
-                repaired_content = repair_json(content) # pyright: ignore
-                if isinstance(repaired_content, str):
-                    return AIMessage(content=repaired_content)
+                repaired_content = repair_json(content, True) # pyright: ignore
+                if isinstance(repaired_content, (dict, list)):
+                    return AIMessage(content=repaired_content) # pyright: ignore
                 else:
                     return input_msg
             except Exception as e:

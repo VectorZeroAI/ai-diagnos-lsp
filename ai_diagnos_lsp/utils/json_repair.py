@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from fix_busted_json import json_matching
 from json_repair import repair_json  # pyright: ignore
 from langchain_core.messages import AIMessage
+from langchain_core.output_parsers import StrOutputParser
 
 import os
 import logging
@@ -16,9 +16,11 @@ That is just stupid.
 """
 
 if os.getenv('AI_DIAGNOS_LOG') is not None:
+    # its not misspelled. I just call it that way. Why not ? Im the autor, I can name it whatever the hell I want
     LOG = True
 else:
     LOG = False # pyright: ignore
+    # pyright does flag this line for no reason. 
 
 
 def is_valid_json(json_in: str) -> bool:
@@ -37,41 +39,20 @@ def optional_repair_json(input_msg: AIMessage) -> AIMessage:
             logging.info("json repairs tool started")
             logging.info(f"The content of AIMessage is the following : {str(input_msg.content)}") # pyright: ignore
 
-        if isinstance(input_msg.content, str): # pyright: ignore
-            content = input_msg.content
-
-        else:
-            if isinstance(input_msg.content, list): # pyright: ignore
-
-                if len(input_msg.content) > 0:   # pyright: ignore
-
-                    if isinstance(input_msg.content[0], str): # pyright: ignore
-                        content = "\n".join(input_msg.content) # pyright: ignore
-
-                    elif isinstance(input_msg.content[0], dict): # pyright: ignore
-                        content = ""
-                        for i in input_msg.content:  # pyright: ignore
-                            if i.get('type') == "text":  # pyright: ignore
-                                if i.get('text') is not None:  # pyright: ignore
-                                    content = content + i.get('text')   # pyright: ignore
-                                else:
-                                    continue
-                    else:
-                        return input_msg
-                else:
-                    return input_msg
-            else:
-                return input_msg
+        parser = StrOutputParser()
+        content = parser.invoke(input_msg)
         
         assert isinstance(content, str)
         if is_valid_json(content):
             return input_msg
         else:
-            if content.startswith('`'):
-                content = content[3:-3]
-                # Slice the 3 prefixing and 3 ending backtricks out. 
-            if content.startswith('json'):
-                content = content[4:]
+            if content.startswith('´´´json') and content.endswith('´´´'):
+                content = content[6:-3]
+                # If content is enclosed in markdown codeblock, remove the codeblock. 
+            elif content.startswith('~~~json') and content.endswith('~~~'):
+                content = content[6:-3]
+                # Also handle this kind of codeblocks
+
             try:
                 repaired_content = repair_json(content, True) # pyright: ignore
                 if isinstance(repaired_content, (dict, list)):

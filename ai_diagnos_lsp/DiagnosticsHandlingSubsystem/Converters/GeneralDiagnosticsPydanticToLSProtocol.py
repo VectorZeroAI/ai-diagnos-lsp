@@ -38,11 +38,11 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.info("searching the file with grep.")
                     if isinstance(document, TextDocument):
-                        logging.info(f"searching for start : {j.start} ; in {document.uri}")
-                        logging.info(f"searching for end : {j.end} ; in {document.uri}")
+                        logging.info(f"searching for start : {j.start}")
+                        logging.info(f"searching for end : {j.end} ")
                     else:
-                        logging.info(f"searching for start : {j.start} ; in {document}")
-                        logging.info(f"searching for end : {j.end} ; in {document}")
+                        logging.info(f"searching for start : {j.start}")
+                        logging.info(f"searching for end : {j.end}")
                 
                 if isinstance(j.start, Tuple):
                     if isinstance(document, TextDocument):

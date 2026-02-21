@@ -11,7 +11,7 @@ from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubs
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalysisConfig
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsSubsystemConfig
 
-LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "BasicSecurity", "CrossFileSecurity", "Deep", "Workspace"]
+LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "Deep", "Workspace"]
     
 
 class __DefaultConfigType(TypedDict):
@@ -39,6 +39,9 @@ class __DefaultConfigType(TypedDict):
     use_cerebras: bool
     model_cerebras: str
     fallback_models_cerebras: list[str] | None
+
+    api_key_huggingface: str
+    model_huggingface: str
 
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig

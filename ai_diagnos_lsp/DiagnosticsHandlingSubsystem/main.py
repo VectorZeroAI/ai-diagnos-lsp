@@ -189,10 +189,18 @@ class DiagnosticsHandlingSubsystemClass:
 
             for i in diagnostics_per_file.items():
                 document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
+                document_of_type_ls = self.ls.workspace.get_text_document(i[0])
                 converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(self.ls, i[1], document)               
-                self.ls.diagnostics[i[0]] = (self.ls.workspace.get_text_document(i[0]).version, 
+                self.ls.diagnostics[i[0]] = (document_of_type_ls.version, 
                                              converted_to_lsp_format
                                              )
+                self.ls.text_document_publish_diagnostics(
+                        types.PublishDiagnosticsParams(
+                            uri=document_of_type_ls.uri,
+                            diagnostics=converted_to_lsp_format,
+                            version=document_of_type_ls.version
+                            )
+                        )
 
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:
@@ -248,6 +256,17 @@ class DiagnosticsHandlingSubsystemClass:
         try:
             with self.ls.diagnostics_lock:
                 self.ls.diagnostics[document_uri] = (document.version, diagnostics_lsprotocol_final_list)
+
+
+            self.ls.text_document_publish_diagnostics(
+                    types.PublishDiagnosticsParams(
+                        uri=document.uri,
+                        diagnostics=diagnostics_lsprotocol_final_list,
+                        version=document.version
+                        )
+                    )
+
+            
             self.ls.workspace_diagnostic_refresh(None)
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:

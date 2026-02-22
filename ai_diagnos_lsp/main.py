@@ -164,11 +164,14 @@ def main():
         Non persistant, doesnt delete them from the DB. 
         To delete from the database, please delete the database. 
         In the future, delete will be added. 
+
+        NOTE: Due to Neovim poorly supporting pull diagnostics, I just push the empty diagnostics. 
         """
         assert params is not None
 
         uri = "".join(params)
         ls.diagnostics[uri] = (-1, [])
+        ls.text_document_publish_diagnostics(types.PublishDiagnosticsParams(uri=uri, diagnostics=[]))
         ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "successfully cleared the diagnostics"))
         ls.workspace_diagnostic_refresh(None)
 
@@ -181,6 +184,7 @@ def main():
 
         for i in ls.diagnostics:
             ls.diagnostics[i] = (-1, [])
+            ls.text_document_publish_diagnostics(types.PublishDiagnosticsParams( uri=i, diagnostics=[]))
         ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "succesfully cleared all the diagnostics"))
         ls.workspace_diagnostic_refresh(None)
 

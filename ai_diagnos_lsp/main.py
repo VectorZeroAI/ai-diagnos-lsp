@@ -14,7 +14,7 @@ def main():
     """
     The server setup function. 
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.13 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.14 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
@@ -143,31 +143,48 @@ def main():
 
     @server.command("Analyse.Document")
     def AnalyseDocument(ls: AIDiagnosLSP, params: Sequence[str]):
-        """ Analyses a document by URI . REQUIRES a URI as its parameter """
-        try:
-            assert params[0] is not None
-            doc = ls.workspace.get_text_document(params[0])
-        except Exception as e:
-            ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt get the URI parameter due to the following error {e}"))
-            return
-        else:
-            ls.AnalysisSubsystem.submit_document_for_analysis(doc, "command")
-            # TODO : Add good logging
+        """
+        Analyses a document by URI . REQUIRES a URI as its parameter 
+        
+        With what analysers it analyses is desided by the configuration at the event command of the Analysis Subsystem
+        """
+
+        assert params is not None
+
+        uri = "".join(params)
+        doc = ls.workspace.get_text_document(uri)
+        ls.AnalysisSubsystem.submit_document_for_analysis(doc, "command")
+        # TODO : Add good logging
     
     @server.command("Clear.AIDiagnostics")
     def ClearAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[str]):
-        """ Clears AI diagnostics for the provided URI """
-        ls.diagnostics[params[0]] = (None, None)
+        """
+        Clears AI diagnostics for the provided URI.
+
+        Non persistant, doesnt delete them from the DB. 
+        To delete from the database, please delete the database. 
+        In the future, delete will be added. 
+        """
+        assert params is not None
+
+        uri = "".join(params)
+        ls.diagnostics[uri] = (-1, [])
         ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "successfully cleared the diagnostics"))
         ls.workspace_diagnostic_refresh(None)
 
     @server.command("Clear.AIDiagnostics.All")
     def ClearAllAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[Any | None]):
-        """ Clears ALL the AI diagnostics """
+        """
+        Clears ALL the AI diagnostics 
+        The same as with clear diagnostics. 
+        """
+
         for i in ls.diagnostics:
-            ls.diagnostics[i] = (None, None)
-        ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "succesfully cleared the diagnostics"))
+            ls.diagnostics[i] = (-1, [])
+        ls.window_show_message(types.ShowMessageParams(types.MessageType(3), "succesfully cleared all the diagnostics"))
         ls.workspace_diagnostic_refresh(None)
 
     server.start_io()
 
+if __name__ == "__main__":
+    main()

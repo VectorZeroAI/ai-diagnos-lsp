@@ -33,7 +33,7 @@ Your main focus is to find consistency issues.
 CROSS_FILE_STYLE_ANALYSIS_PROMPT = f"""
 {IDENTITY}
 
-Your main focus is finding consistancy errors. 
+Your main focus is finding consistency errors. 
 
 {CONSISTENCY_ERROR_DESC}
 

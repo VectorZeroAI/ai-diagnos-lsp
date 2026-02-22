@@ -18,7 +18,7 @@ Issue priority categories:
 
 {FORMAT_DESC}
 
------- BEGINN EXAMPLES --------
+------ BEGIN EXAMPLES --------
 
 {GOOD_EXAMPLES}
 
@@ -28,7 +28,7 @@ Issue priority categories:
 
 ------- END EXAMPLES ----------
 
-------- BEGINN BAD EXAMPLES [DONT DO THIS] --------
+------- BEGIN BAD EXAMPLES [DONT DO THIS] --------
 
 {BAD_EXAMPLES}
 

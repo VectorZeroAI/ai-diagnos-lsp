@@ -16,7 +16,7 @@ Issue priority categories:
 
 {NOTE}
 
------- BEGINN GOOD EXAMPLES ----------
+------ BEGIN GOOD EXAMPLES ----------
 
 {GOOD_EXAMPLES}
 
@@ -24,7 +24,7 @@ Issue priority categories:
 
 ------ END GOOD EXAMPLES -------------
 
------- BEGINN BAD EXAMPLES [ DONT DO THIS ] ----------
+------ BEGIN BAD EXAMPLES [ DONT DO THIS ] ----------
 
 {BAD_EXAMPLES}
 
@@ -49,7 +49,7 @@ Issue priority categories:
 
 {NOTE}
 
------- BEGINN GOOD EXAMPLES ----------
+------ BEGIN GOOD EXAMPLES ----------
 
 {GOOD_EXAMPLES}
 
@@ -57,7 +57,7 @@ Issue priority categories:
 
 ------ END GOOD EXAMPLES -------------
 
------- BEGINN BAD EXAMPLES [ DONT DO THIS ] ----------
+------ BEGIN BAD EXAMPLES [ DONT DO THIS ] ----------
 
 {BAD_EXAMPLES}
 

@@ -1,10 +1,10 @@
 from .SHARED import CONSISTENCY_ERROR_DESC, CROSS_FILE_NOTE, FOOTER, FORMAT_DESC, IDENTITY, NOTE
-from EXEMPLARS import GOOD_EXAMPLES, COT_EXAMPLES, BAD_EXAMPLES
+from .EXEMPLARS import GOOD_EXAMPLES, COT_EXAMPLES, BAD_EXAMPLES
 
 BASIC_STYLE_ANALYSIS_PROMPT = f"""
 {IDENTITY}
 
-Your main focus is to find constisancy issues. 
+Your main focus is to find consistency issues. 
 
 {CONSISTENCY_ERROR_DESC}
 
@@ -12,7 +12,7 @@ Your main focus is to find constisancy issues.
 
 {NOTE}
 
------- BEGINN EXAMPLES --------
+------ BEGIN EXAMPLES --------
 
 {GOOD_EXAMPLES}
 
@@ -20,7 +20,7 @@ Your main focus is to find constisancy issues.
 
 ------ END EXAMPLES -----------
 
------- BEGINN BAD EXAMPLES [ DONT DO THIS ] --------
+------ BEGIN BAD EXAMPLES [ DONT DO THIS ] --------
 
 {BAD_EXAMPLES}
 
@@ -43,7 +43,7 @@ Your main focus is finding consistancy errors.
 
 {NOTE}
 
------- BEGINN EXAMPLES --------
+------ BEGIN EXAMPLES --------
 
 {GOOD_EXAMPLES}
 
@@ -51,7 +51,7 @@ Your main focus is finding consistancy errors.
 
 ------ END EXAMPLES -----------
 
------- BEGINN BAD EXAMPLES [ DONT DO THIS ] --------
+------ BEGIN BAD EXAMPLES [ DONT DO THIS ] --------
 
 {BAD_EXAMPLES}
 

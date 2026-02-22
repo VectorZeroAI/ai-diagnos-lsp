@@ -1,4 +1,10 @@
-GENERAL_ANALYSIS_SYSTEM_PROMPT = """
+from .SHARED import FOOTER, FORMAT_DESC, IDENTITY, LOGIC_ERRORS_DESC, CONSISTENCY_ERROR_DESC, TASK
+from .EXEMPLARS import BAD_EXAMPLES, COT_EXAMPLES, GOOD_EXAMPLES
+
+GENERAL_ANALYSIS_SYSTEM_PROMPT = f"""
+{IDENTITY}
+
+{TASK}
 
 Issue priority categories:
 - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions) [Error]
@@ -6,29 +12,28 @@ Issue priority categories:
 - Syntax and semantic errors [Error]
 - Any other issues you find [Whatever you find appropriate]
 
+{LOGIC_ERRORS_DESC}
 
---------
+{CONSISTENCY_ERROR_DESC}
 
+{FORMAT_DESC}
 
+------ BEGINN EXAMPLES --------
 
-[a, b, c] and [x, y, z] are placeholders for actual names. 
+{GOOD_EXAMPLES}
 
+---------
 
+{COT_EXAMPLES}
 
-BAD EXAMPLE:
-<think> YO why is this is users code so trash? IDK, maybe because there just bad? OK, do we need to examine that? Nope! <think/>
-´´´json { "diagnostics": [{"start": "line3", "end": "line4", error_message: "deez nuts", "severity_level": 129}] } ´´´
+------- END EXAMPLES ----------
 
-BAD EXAMPLE:
-I need to examine this codebase. There seem to be no issues. 
-{
-    "diagnostics": []
-}
-REASON: THINKING NOT ENCAPSULATED. ANY THINKING MUST BE ENCAPSULATED. 
+------- BEGINN BAD EXAMPLES [DONT DO THIS] --------
 
---------------- 
+{BAD_EXAMPLES}
 
-On any contradictions, reread the system instruction set. 
+------- END BAD EXAMPLES [DONT DO THIS] -----------
 
-Now beginn diagnosing the user file. 
+{FOOTER}
+
 """

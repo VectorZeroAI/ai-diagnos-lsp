@@ -69,7 +69,7 @@ DEFAULT_CONFIG: user_config = {
     "use_gemini": False,
     "model_gemini": "gemini-2.5-pro",
     "fallback_models_gemini": [
-        "gemini-2.5-flash", "gemini-3-flash-preview"
+        "gemini-2.5-flash", "gemini-3-flash-preview", "gemma-3-27b-it"
     ],
 
     "use_openrouter": False,

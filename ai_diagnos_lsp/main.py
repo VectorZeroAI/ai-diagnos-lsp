@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Sequence, Any
+from typing import Sequence
 
 from lsprotocol import types
 
@@ -176,7 +176,7 @@ def main():
         ls.workspace_diagnostic_refresh(None)
 
     @server.command("Clear.AIDiagnostics.All")
-    def ClearAllAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[Any | None]):
+    def ClearAllAIDiagnostics(ls: AIDiagnosLSP):
         """
         Clears ALL the AI diagnostics 
         The same as with clear diagnostics. 

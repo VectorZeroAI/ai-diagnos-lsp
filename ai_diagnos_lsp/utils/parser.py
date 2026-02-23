@@ -10,7 +10,7 @@ import logging
 import subprocess
 import json
 
-ROOT_MARKERS = {"setup.py", "pyproject.toml", "setup.cfg"}
+ROOT_MARKERS = {"setup.py", "pyproject.toml", "setup.cfg", ".git"}
 
 LOG = True if os.getenv('AI_DIAGNOS_LOG') is not None else False
 

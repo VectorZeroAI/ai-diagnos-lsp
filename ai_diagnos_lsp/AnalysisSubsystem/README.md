@@ -6,6 +6,8 @@ The analysis subsystem doc.
 
 Submit document for analysis call. Everything else is handeled by the configuration.
 
+Also has a get status method that lets you get the current status. Planned to be used with AIStatus command.
+
 ## Configuration
 
 ```json

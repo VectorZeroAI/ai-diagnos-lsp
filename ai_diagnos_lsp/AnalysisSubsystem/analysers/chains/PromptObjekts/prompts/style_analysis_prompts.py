@@ -1,8 +1,8 @@
-from .SHARED import CONSISTENCY_ERROR_DESC, CROSS_FILE_NOTE, FOOTER, FORMAT_DESC, IDENTITY, NOTE
+from .SHARED import CONSISTENCY_ERROR_DESC, CROSS_FILE_NOTE, FOOTER, FORMAT_DESC, NOTE, TASK
 from .EXEMPLARS import GOOD_EXAMPLES, COT_EXAMPLES, BAD_EXAMPLES
 
 BASIC_STYLE_ANALYSIS_PROMPT = f"""
-{IDENTITY}
+{TASK}
 
 Your main focus is to find consistency issues. 
 
@@ -31,7 +31,7 @@ Your main focus is to find consistency issues.
 """
 
 CROSS_FILE_STYLE_ANALYSIS_PROMPT = f"""
-{IDENTITY}
+{TASK}
 
 Your main focus is finding consistency errors. 
 

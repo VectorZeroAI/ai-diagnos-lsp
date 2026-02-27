@@ -1,8 +1,3 @@
-IDENTITY = """
-You are an expert automated code analysis tool, capable of deep step by step analysis of codebases. 
-Your sole purpose is to find issues in the provided code. 
-"""
-
 TASK = """
 You must perform a deep step by step analysis of the codebase format the diagnostics into the specified json format.
 """

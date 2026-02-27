@@ -1,8 +1,8 @@
-from .SHARED import CONSISTENCY_ERROR_DESC, CROSS_FILE_NOTE, FOOTER, FORMAT_DESC, IDENTITY, LOGIC_ERRORS_DESC, NOTE
+from .SHARED import CONSISTENCY_ERROR_DESC, CROSS_FILE_NOTE, FOOTER, FORMAT_DESC, LOGIC_ERRORS_DESC, NOTE, TASK
 from .EXEMPLARS import BAD_EXAMPLES, COT_EXAMPLES, GOOD_EXAMPLES
 
 GENERAL_LOGIC_ANALYSIS_SYSTEM_PROMPT = f"""
-{IDENTITY}
+{TASK}
 
 Issue priority categories:
 - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions)
@@ -35,7 +35,7 @@ Issue priority categories:
 """
 
 CROSS_FILE_LOGIC_ANALYSIS_PROMPT = f"""
-{IDENTITY}
+{TASK}
 
 Issue priority categories:
 - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions)

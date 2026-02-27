@@ -31,6 +31,55 @@ class DiagnosticsSubsystemConfig(TypedDict):
     check_ttl_for_invalidation: int | float
 
 
+def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
+    """
+    The internal thread function that is spawned to concurently load all the diagnostics.
+    An optimisations to not block the main thread for a long time, as this function is going
+    through the whole DB, so it takes a while to finish.
+    """
+    all_diagnostics_for_every_file = curr.execute("""
+    SELECT diagnostics, uri FROM all_diagnostics_view
+                                                      """).fetchall()
+    
+    diagnostics_sorted_per_file: dict[str, list[str]] = {}
+
+    for i in all_diagnostics_for_every_file:
+        current_uri = i[1]
+        diagnostics = i[0]
+        previous = diagnostics_sorted_per_file.get(current_uri)
+        if previous is None:
+            previous = []
+        new_list = previous
+        new_list.append(diagnostics)
+        diagnostics_sorted_per_file[current_uri] = new_list
+
+    diagnostics_per_file = {}
+
+    for i in diagnostics_sorted_per_file.items():
+        pydantic_objekts_list: list[BaseModel] = []
+        for j in i[1]:
+            pydantic_objekts_list.append(GeneralDiagnosticsPydanticObjekt.model_validate_json(j))
+
+        diagnostics_per_file[i[0]] = pydantic_objekts_list
+
+    for i in diagnostics_per_file.items():
+        document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
+        document_of_type_ls = ls.workspace.get_text_document(i[0])
+        converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(ls, i[1], document)
+        ls.diagnostics[i[0]] = (document_of_type_ls.version, 
+                                     converted_to_lsp_format
+                                     )
+        ls.text_document_publish_diagnostics(
+                types.PublishDiagnosticsParams(
+                    uri=document_of_type_ls.uri,
+                    diagnostics=converted_to_lsp_format,
+                    version=document_of_type_ls.version
+                    )
+                )
+
+
+
+
 class DiagnosticsHandlingSubsystemClass:
     """
     My own internal subsyste for handling many different internal types of diagnostics,
@@ -162,55 +211,17 @@ class DiagnosticsHandlingSubsystemClass:
         """
         curr = self.conn.cursor()
         try:
-            all_diagnostics_for_every_file = curr.execute("""
-            SELECT diagnostics, uri FROM all_diagnostics_view
-                                                              """).fetchall()
-            
-            diagnostics_sorted_per_file: dict[str, list[str]] = {}
-
-            for i in all_diagnostics_for_every_file:
-                current_uri = i[1]
-                diagnostics = i[0]
-                previous = diagnostics_sorted_per_file.get(current_uri)
-                if previous is None:
-                    previous = []
-                new_list = previous
-                new_list.append(diagnostics)
-                diagnostics_sorted_per_file[current_uri] = new_list
-
-            diagnostics_per_file = {}
-
-            for i in diagnostics_sorted_per_file.items():
-                pydantic_objekts_list: list[BaseModel] = []
-                for j in i[1]:
-                    pydantic_objekts_list.append(GeneralDiagnosticsPydanticObjekt.model_validate_json(j))
-
-                diagnostics_per_file[i[0]] = pydantic_objekts_list
-
-            for i in diagnostics_per_file.items():
-                document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
-                document_of_type_ls = self.ls.workspace.get_text_document(i[0])
-                converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(self.ls, i[1], document)               
-                self.ls.diagnostics[i[0]] = (document_of_type_ls.version, 
-                                             converted_to_lsp_format
-                                             )
-                self.ls.text_document_publish_diagnostics(
-                        types.PublishDiagnosticsParams(
-                            uri=document_of_type_ls.uri,
-                            diagnostics=converted_to_lsp_format,
-                            version=document_of_type_ls.version
-                            )
-                        )
-
+            threading.Thread(
+                    target=__load_all_diagnostics_thread__,
+                    daemon=True,
+                    args=[self.ls, curr]
+                    ).start()
         except Exception as e:
             if os.getenv("AI_DIAGNOS_LOG") is not None:
                 logging.error(f"Couldnt load diagnostics due to following error : {e}")
             return False
         finally:
             curr.close()
-                
-
-
 
     def load_diagnostics_for_file(self, document_uri: str) -> bool:
         """

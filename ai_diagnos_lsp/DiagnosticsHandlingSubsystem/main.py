@@ -20,6 +20,13 @@ if TYPE_CHECKING:
 
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPydanticToLSProtocol import GeneralDiagnosticsPydanticToLSProtocol
 
+
+if LOG:
+    LOG = True
+else:
+    LOG = False # # pyright: ignore
+
+
 class DiagnosticsSubsystemConfig(TypedDict):
     """
     All the time units are in seconds. 
@@ -37,48 +44,51 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     An optimisations to not block the main thread for a long time, as this function is going
     through the whole DB, so it takes a while to finish.
     """
-    all_diagnostics_for_every_file = curr.execute("""
-    SELECT diagnostics, uri FROM all_diagnostics_view
-                                                      """).fetchall()
-    
-    diagnostics_sorted_per_file: dict[str, list[str]] = {}
+    try:
+        all_diagnostics_for_every_file = curr.execute("""
+        SELECT diagnostics, uri FROM all_diagnostics_view
+                                                          """).fetchall()
+        
+        diagnostics_sorted_per_file: dict[str, list[str]] = {}
 
-    for i in all_diagnostics_for_every_file:
-        current_uri = i[1]
-        diagnostics = i[0]
-        previous = diagnostics_sorted_per_file.get(current_uri)
-        if previous is None:
-            previous = []
-        new_list = previous
-        new_list.append(diagnostics)
-        diagnostics_sorted_per_file[current_uri] = new_list
+        for i in all_diagnostics_for_every_file:
+            current_uri = i[1]
+            diagnostics = i[0]
+            previous = diagnostics_sorted_per_file.get(current_uri)
+            if previous is None:
+                previous = []
+            new_list = previous
+            new_list.append(diagnostics)
+            diagnostics_sorted_per_file[current_uri] = new_list
 
-    diagnostics_per_file = {}
+        diagnostics_per_file = {}
 
-    for i in diagnostics_sorted_per_file.items():
-        pydantic_objekts_list: list[BaseModel] = []
-        for j in i[1]:
-            pydantic_objekts_list.append(GeneralDiagnosticsPydanticObjekt.model_validate_json(j))
+        for i in diagnostics_sorted_per_file.items():
+            pydantic_objekts_list: list[BaseModel] = []
+            for j in i[1]:
+                pydantic_objekts_list.append(GeneralDiagnosticsPydanticObjekt.model_validate_json(j))
 
-        diagnostics_per_file[i[0]] = pydantic_objekts_list
+            diagnostics_per_file[i[0]] = pydantic_objekts_list
 
-    for i in diagnostics_per_file.items():
-        document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
-        document_of_type_ls = ls.workspace.get_text_document(i[0])
-        converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(ls, i[1], document)
-        ls.diagnostics[i[0]] = (document_of_type_ls.version, 
-                                     converted_to_lsp_format
-                                     )
-        ls.text_document_publish_diagnostics(
-                types.PublishDiagnosticsParams(
-                    uri=document_of_type_ls.uri,
-                    diagnostics=converted_to_lsp_format,
-                    version=document_of_type_ls.version
+        for i in diagnostics_per_file.items():
+            document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
+            document_of_type_ls = ls.workspace.get_text_document(i[0])
+            converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(ls, i[1], document)
+            ls.diagnostics[i[0]] = (document_of_type_ls.version, 
+                                         converted_to_lsp_format
+                                         )
+            ls.text_document_publish_diagnostics(
+                    types.PublishDiagnosticsParams(
+                        uri=document_of_type_ls.uri,
+                        diagnostics=converted_to_lsp_format,
+                        version=document_of_type_ls.version
+                        )
                     )
-                )
-
-
-
+    except Exception as e:
+        if LOG:
+            logging.error(f"Load all diagnostics thread encountered the following exception: {e}")
+    finally:
+        curr.close()
 
 class DiagnosticsHandlingSubsystemClass:
     """
@@ -175,7 +185,7 @@ class DiagnosticsHandlingSubsystemClass:
                     INSERT INTO files(uri, last_changed_at) VALUES (?, ?)
                                       """, (document_uri, time.time()))
         except Exception as e:
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.error(f"register file write encoutered the following error: {e}")
             raise Exception(f"register file write encoutered the following exeption: {e}") from e
         finally:
@@ -193,12 +203,12 @@ class DiagnosticsHandlingSubsystemClass:
                 INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at) VALUES(?, ?, ?)
                                   """, (document_uri, diagnostics.model_dump_json(), time.time()))
         except Exception as e:
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.error(f"Couldnt register new diagnosic due to following error: {e}")
             return False
         else:
             self.ls.workspace_diagnostic_refresh(None)
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.info("successfully registered new diagnostics")
             return True
         finally:
@@ -207,7 +217,7 @@ class DiagnosticsHandlingSubsystemClass:
 
     def load_all_diagnostics(self):
         """
-        Directly publishes all the diagnostics that it can find. 
+        Goes through the database recursivly and loads all the diagnostics it can find into the lsp.
         """
         curr = self.conn.cursor()
         try:
@@ -217,11 +227,9 @@ class DiagnosticsHandlingSubsystemClass:
                     args=[self.ls, curr]
                     ).start()
         except Exception as e:
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.error(f"Couldnt load diagnostics due to following error : {e}")
             return False
-        finally:
-            curr.close()
 
     def load_diagnostics_for_file(self, document_uri: str) -> bool:
         """
@@ -235,7 +243,7 @@ class DiagnosticsHandlingSubsystemClass:
                               """, (document_uri,)).fetchall()
 
             if not len(json_diagnostics_list):
-                if os.getenv("AI_DIAGNOS_LOG") is not None:
+                if LOG:
                     logging.warning(f"No diagnostics for the file found . File : {document_uri}")
                 return False
             
@@ -245,7 +253,7 @@ class DiagnosticsHandlingSubsystemClass:
                         GeneralDiagnosticsPydanticObjekt.model_validate_json(i[0])
                         )
         except Exception as e:
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.error(f"Couldnt load diagnostics due to following error : {e}")
             return False
         finally:
@@ -260,7 +268,7 @@ class DiagnosticsHandlingSubsystemClass:
             for i in diagnostics_lsprotocol_list:
                 diagnostics_lsprotocol_final_list.append(i)
         except Exception as e:
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.error(f"couldnt convert diagnostics from pydantic to lsprotocol standarts due to the following error : {e}")
             return False
 
@@ -280,12 +288,12 @@ class DiagnosticsHandlingSubsystemClass:
             
             self.ls.workspace_diagnostic_refresh(None)
         except Exception as e:
-            if os.getenv("AI_DIAGNOS_LOG") is not None:
+            if LOG:
                 logging.error(f"Couldnt publish diagnostics due to the following reason: {e}")
             self.ls.window_show_message(types.ShowMessageParams(types.MessageType(1), f"Couldnt publish diagnostics for the following reason : {e}"))
             return False
 
-        if os.getenv("AI_DIAGNOS_LOG") is not None:
+        if LOG:
             logging.info("Sucsessfully published diagnostics. ")
         return True
         
@@ -299,19 +307,19 @@ class DiagnosticsHandlingSubsystemClass:
                                   """).fetchall()
                 for i in last_writes_list:
                     if time.time() - i[0] > self.ttl_seconds_until_deletion:
-                        if os.getenv("AI_DIAGNOS_LOG") is not None:
+                        if LOG:
                             logging.info(f"file: {i[1]}, last_changed_at: {i[0]}")
                         with self.db_lock:
                             curr.execute("""
                             DELETE FROM files WHERE uri = ?
                                               """, (i[1],))
                         self.load_all_diagnostics()
-                        if os.getenv("AI_DIAGNOS_LOG") is not None:
+                        if LOG:
                             logging.info(f"Deleted all records for file {i[1]} because its last change time is {i[0]}")
-                if os.getenv("AI_DIAGNOS_LOG") is not None:
+                if LOG:
                     logging.info("Checked all the files")
             except Exception as e:
-                if os.getenv("AI_DIAGNOS_LOG") is not None:
+                if LOG:
                     logging.error(f"TTLBasedDeletionThread encoutered the following problem : {e}")
             finally:
                 time.sleep(self.check_ttl_for_deletion)
@@ -351,18 +359,17 @@ class DiagnosticsHandlingSubsystemClass:
                             DELETE FROM diagnostics_{i[3]} WHERE diagnostics = ?
                                               """, (i[2],))
                         self.load_diagnostics_for_file(i[0])
-                        if os.getenv("AI_DIAGNOS_LOG") is not None:
+                        if LOG:
                             logging.info(f"Deleted from {i[3]} diagnostics:{i[2]}, and called refesh on file: {i[0]}.")
                     else:
-                        if os.getenv("AI_DIAGNOS_LOG") is not None:
+                        if LOG:
                             logging.info(f"Did not delete, because last_changed_at = {file_change_time[0]}, and diagnostics were created at {i[1]}, with self.ttl_seconds_until_invalidation being {self.ttl_seconds_until_invalidation}")
                         
             except Exception as e:
-                if os.getenv("AI_DIAGNOS_LOG") is not None:
+                if LOG:
                     logging.error(f"TTLBasedDiagnosticsInvalidationThread encoutered the follwoign error: {e}")
             finally:
                 time.sleep(self.check_ttl_for_invalidation)
-        curr.close()
 
 def DiagnosticsHandlingSubsystemFactory(ls: AIDiagnosLSP,) -> DiagnosticsHandlingSubsystemClass:
     return DiagnosticsHandlingSubsystemClass(ls=ls)

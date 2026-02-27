@@ -61,6 +61,8 @@ abc and xyz inside EXAMPLES are PLACEHOLDERS.
 
 FOOTER = """
 On any contradictions, reread the system prompt.
+DO NOT FORGET TO CLOSE YOUR THINKING BEFORE PROVIDING JSON.
+DO NOT FORGET TO CLOSE YOUR THINKING BEFORE PROVIDING JSON.
 Now, start the diagnostics!
 """
 

@@ -18,12 +18,11 @@ Even if that is not nesesary, I still think that is the correct approach.
 The LLMs are stored under ´chains/LLM/´. 
 The prompt objects, in form of factory functions, are stored under ´chains/PromptObjects/´.
 
-More on that in the dedicated file. 
-TODO: ADD THE LINK TO HERE
+[More about LLMs here](./chains/LLM/README.md)
+[More about PromptObjects here](./chains/PromptObjekts/README.md)
 
 ### Contribution
 
 Adding anouther LLM for anouther provider and wiring it in is pretty much a welcome PR. 
 
-If you want to work with prompts, read their dedicated readme. 
-TODO: ADD LINK TO IT HERE.
+If you want to work with prompts, read their dedicated readme [here](./chains/PromptObjekts/prompts/README.md)

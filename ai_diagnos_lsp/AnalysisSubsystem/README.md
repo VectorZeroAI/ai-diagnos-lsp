@@ -28,4 +28,4 @@ Planned: Deep and Workspace and their variants.
 ## Contributing
 
 If you have any good ideas, open an issue. 
-Dont just through a PR without an issue onto here, this is a core. 
+Dont just through a PR without an issue onto here, this is part of the core functionality.

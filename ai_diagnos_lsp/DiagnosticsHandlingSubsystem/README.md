@@ -10,6 +10,7 @@ The subsystem is currently located under utils/DiagnosticsHandlingSubsystem
 I will explain the architecture the best I can.
 > [!NOTE]
 > The server is pull based, so **publishing** refers to exposing them to the client
+> Due to Neovim not supporting pull diagnostics fully, publishing also referes to pushing diagnostics. Yes, both are done at the same time. 
 
 ## On creation : 
 On construction of the class, it builds an SQLite DB for diagnostics storage. 
@@ -142,5 +143,36 @@ flowchart TB
 | table name | colums list | use case |
 | ----| ---- | ---- |
 | files | uri ; last_changed_at | for tracking file writes |
+| diagnostics_<type> | uri ; diagnostic ; created_at | For storing diagnostics |
+| all_diagnostics_view | uri ; diagnostic ; diagnostics_type ; created at | for loading diagnostics |
 
+Diagnostics tables are created per type of diagnostics, and I will not list them all here, but here is how they look like:
+
+### files table
+
+| collum | example content | use case | type | 
+| --------------- | --------------- | --------------- | -------- |
+| uri | "file:///home/me/work/project/src/main.py" | for tracking file appearences | STRING |
+| last changed at | 23580 | tracking last file write, e.g. last time the file was worked on | REAL |
+    
+-----
+
+### diagnostics tables
+> [!NOTE]
+> They all have the same rows
+
+| collum | example content | use case | type |
+| --------------- | --------------- | --------------- | --------------- |
+| uri | "file:///EXAMPLE/PATH" | attributing the diagnostics to a file | STRING / FOREIGHN KEY |
+| diagnostic | {"diagnostics":[{"start":"EXAMPLE","end":"EXAMPLE","error_message": "MESSAGE EXAMPLE","severity":2}]} | Storage of the diagnostic itself | STRING / UNIQUE |
+| created_at | 2358723 | creation time tracking, for knowing if it should be invalid or not | REAL |
+
+### all diagnostics view
+
+| collum | example content | use case | type |
+| --------------- | --------------- | --------------- | --------------- |
+| uri | "file:///EXAMPLE/PATH" | attributing the diagnostics to a file | STRING / FOREIGHN KEY |
+| diagnostic | {"diagnostics":[{"start":"EXAMPLE","end":"EXAMPLE","error_message": "MESSAGE EXAMPLE","severity":2}]} | Storage of the diagnostic itself | STRING / UNIQUE |
+| diagnostic_type | "Basic" | Not actually used | STRING |
+| created_at | 2358723 | creation time tracking, for knowing if it should be invalid or not | REAL |
 

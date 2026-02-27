@@ -8,6 +8,10 @@ The prompts are split into [SHARED.py](./SHARED.py), and [EXEMPLARS.py](./EXEMPL
 The prompts are based on rule based directives, and In Context Learning for everything else.
 The actual prompts are just assembling the parts from the SHARED and EXEMPLARS files. 
 
+## Reference:
+
+Look up the prompt report on arxiv, and its related works, that is some good stuff there. I referenced that myself. 
+
 ## Contributing
 
 This part needs a lot of contributions. 

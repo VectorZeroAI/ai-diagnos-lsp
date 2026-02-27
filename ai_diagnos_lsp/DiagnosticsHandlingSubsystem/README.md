@@ -176,3 +176,9 @@ Diagnostics tables are created per type of diagnostics, and I will not list them
 | diagnostic_type | "Basic" | Not actually used | STRING |
 | created_at | 2358723 | creation time tracking, for knowing if it should be invalid or not | REAL |
 
+
+## Contiburing
+
+This is a part of the core LSP, so I dont think anyone will really be able to contribute meaningfully, but I would actually not be agains contributions. 
+But I will be pretty maticulous at what I merge and what I dont merge. 
+Or you can open an issue and wait for me to implement that.

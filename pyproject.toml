@@ -24,7 +24,9 @@ cache-dir = ".uv-cache"
 no-cache = false
 concurrent-builds = 1
 package = true
-no-binary = ["hf-xet"]
+override-dependencies = [
+    "hf-xet; sys_platform == 'never'"
+]
 
 [tool.pyright]
 typeCheckingMode = "strict"

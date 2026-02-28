@@ -8,17 +8,16 @@ import threading
 
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsHandlingSubsystemFactory
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemClassFactory
-from ai_diagnos_lsp.default_config import user_config
+from ai_diagnos_lsp.default_config import SUPPORTED_DIAGNOSTIC_TYPES, user_config
 
 class AIDiagnosLSP(LanguageServer):
     """
     My language server class. 
     It is pull diagnostics based. 
     """
+    
+    SUPPORTED_DIAGNOSTIC_TYPES = SUPPORTED_DIAGNOSTIC_TYPES
 
-    SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "BasicLogic",
-                                  "CrossFileLogic", "BasicStyle", "CrossFileStyle",
-                                  "BasicSecurity", "CrossFileSecurity", "Deep"]
     # NOTE : DONT FORGET TO UPDATE THE DEFAULT CONFIG WITH THE NEW DEFINITION AFTER EACH CHANGE
 
     def __init__(self, *args, **kwargs): # pyright: ignore

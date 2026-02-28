@@ -8,12 +8,12 @@ from langchain_core.runnables import RunnableSerializable
 from pydantic import BaseModel
 from pathlib import Path
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenAiLLM import OpenAiLlmFactory
 
 
 def BasicChainOpenrouterFactory(model_openrouter: str, api_key_openrouter: str) -> RunnableSerializable[dict[Any, Any], Any]:
 
-    Llm = OpenrouterLlmFactory(model_openrouter, api_key_openrouter)
+    Llm = OpenAiLlmFactory(model_openrouter, api_key_openrouter)
 
     try:
         with open(f"{Path(__file__).absolute().resolve().parent}/prompts/general_analysis_system_prompt.txt", "r") as f:

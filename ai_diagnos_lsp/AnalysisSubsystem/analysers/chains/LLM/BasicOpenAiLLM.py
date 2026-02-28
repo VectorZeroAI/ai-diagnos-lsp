@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 
 from pydantic import SecretStr
 
-def OpenrouterLlmFactory(model_openai: str, api_key_openai: str) -> ChatOpenAI:
+def OpenAILlmFactory(model_openai: str, api_key_openai: str) -> ChatOpenAI:
     """
     This is the Langchain llm objekt Factory function for the Openrouter provider.
     It can not be created with fallback models due to how openrouter counts ratelimits. 

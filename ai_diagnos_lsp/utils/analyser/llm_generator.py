@@ -10,6 +10,10 @@ from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGeminiLLM import
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicGroqLLM import BasicGroqLLMFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicCerebrasLLM import BasicCerebrasLLMFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenrouterLLM import OpenrouterLlmFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicOpenAiLLM import OpenAILlmFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicClaudeLLM import BasicClaudeLLMFactoryFunction
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.LLM.BasicHuggingFaceLLM import BasicHuggingFaceLLMFactory
+
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.default_config import user_config
@@ -17,7 +21,7 @@ if TYPE_CHECKING:
 if os.getenv('AI_DIAGNOS_LOG') is not None:
     LOG = True
 else:
-    LOG = False
+    LOG = False # pyright: ignore
 
 
 def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
@@ -29,7 +33,7 @@ def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
         logging.info("Llm Factory with config started")
     try:
 
-        if config["use_omniprovider"]:
+        if config["use"] == 'Omniprovider':
             llm = BasicOmniproviderLLMFactory(
                     model_openrouter=config["model_openrouter"],
                     api_key_openrouter=config["api_key_openrouter"],
@@ -46,30 +50,46 @@ def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
                     model_huggingface=config['model_huggingface']
                     )
 
-        elif config["use_gemini"]:
+        elif config["use"] == 'gemini':
             llm = BasicGeminiLlmFactory(
                     api_key_gemini=config["api_key_gemini"],
                     model_gemini=config["model_gemini"],
                     fallback_gemini_models=config.get("fallback_models_gemini")
                     )
 
-        elif config["use_openrouter"]:
+        elif config["use"] == 'Openrouter':
             llm = OpenrouterLlmFactory(
                     model_openrouter=config["model_openrouter"],
                     api_key_openrouter=config["api_key_openrouter"]
                     )
 
-        elif config['use_groq']:
+        elif config['use'] == 'groq':
             llm = BasicGroqLLMFactory(
                     model_groq=config['model_groq'],
                     api_key_groq=config['api_key_groq'],
                     fallback_models_groq=config.get('fallback_models_groq')
                     )
-        elif config['use_cerebras']:
+        elif config['use'] == 'cerebras':
             llm = BasicCerebrasLLMFactory(
                     model_cerebras=config['model_cerebras'],
                     api_key_cerebras=config['api_key_cerebras'],
                     fallback_models_cerebras=config.get('fallback_models_cerebras')
+                    )
+        elif config['use'] == 'OpenAI':
+            llm = OpenAILlmFactory(
+                    model_openai=config['model_openai'],
+                    api_key_openai=config['api_key_openai']
+                    )
+        elif config['use'] == 'huggingface':
+            llm = BasicHuggingFaceLLMFactory(
+                    api_key_huggingface=config['api_key_huggingface'],
+                    model_huggingface=config['model_huggingface']
+                    )
+
+        elif config['use'] == 'Claude':
+            llm = BasicClaudeLLMFactoryFunction(
+                    api_key_claude=config['api_key_claude'],
+                    model_claude=config['model_claude']
                     )
 
         else:

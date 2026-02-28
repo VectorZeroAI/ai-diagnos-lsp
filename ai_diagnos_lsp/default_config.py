@@ -5,14 +5,16 @@ The default config, wich will get partially or fully overwritten by the user con
 """
 
 from __future__ import annotations
-from typing import Literal, TypeAlias, TypedDict
+from typing import Literal, TypedDict
 
 from ai_diagnos_lsp.AnalysisSubsystem.AnalysisSubsystemClass import AnalysisSubsystemConfig
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.CrossFileAnalyser import CrossFileAnalysisConfig
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.main import DiagnosticsSubsystemConfig
 
-LiteralSupportedAnalysisTypes: TypeAlias = Literal["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "Deep", "Workspace"]
-    
+LiteralSupportedAnalysisTypes = Literal["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "Deep", "Workspace"]
+LiteralSupportedProviders = Literal["Openrouter", "Omniprovider", "Claude", "OpenAI", "gemini", "groq", "cerebras", "huggingface"]
+
+SUPPORTED_DIAGNOSTIC_TYPES = ["Basic", "CrossFile", "BasicLogic", "CrossFileLogic", "BasicStyle", "CrossFileStyle", "Deep"] 
 
 class __DefaultConfigType(TypedDict):
     
@@ -21,40 +23,37 @@ class __DefaultConfigType(TypedDict):
     max_file_size: int
     show_progress: bool
     show_progress_every_ms: int | float
-    ai_diagnostics_symbol: str
 
-    use_omniprovider: bool
+    use: LiteralSupportedProviders
 
-    use_gemini: bool
     model_gemini: str
     fallback_models_gemini: list[str] | None
 
-    use_openrouter: bool
     model_openrouter: str
 
-    use_groq: bool
     model_groq: str
     fallback_models_groq: list[str] | None
 
-    use_cerebras: bool
     model_cerebras: str
     fallback_models_cerebras: list[str] | None
 
-    api_key_huggingface: str
     model_huggingface: str
 
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig
     DiagnosticsSubsystem: DiagnosticsSubsystemConfig
 
-    plugins: dict[str, str]
-
+    plugin_parsers: dict[str, str]
+    prompt_overrides: dict[str, str]
 
 class user_config(__DefaultConfigType):
     api_key_gemini: str
     api_key_openrouter: str
     api_key_groq: str
     api_key_cerebras: str
+    api_key_huggingface: str
+    api_key_openai: str
+    api_key_claude: str
 
 DEFAULT_CONFIG: user_config = {
     "timeout": 99999,
@@ -62,28 +61,23 @@ DEFAULT_CONFIG: user_config = {
     "max_file_size": 10000,
     "show_progress": True,
     "show_progress_every_ms": 5000,
-    "ai_diagnostics_symbol": "AI",
 
-    "use_omniprovider": True,
+    "use": "Omniprovider",
 
-    "use_gemini": False,
     "model_gemini": "gemini-2.5-pro",
     "fallback_models_gemini": [
         "gemini-2.5-flash", "gemini-3-flash-preview", "gemma-3-27b-it"
     ],
 
-    "use_openrouter": False,
     "model_openrouter": "tngtech/tng-r1t-chimera:free",
 
     "model_huggingface": "Qwen2.5-Coder-7B-Instruct",
 
-    "use_groq": False,
     "model_groq": "openai/gpt-oss-120b",
     "fallback_models_groq": [
         "openai/gpt-oss-20b", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b", "llama-3.3-70b-versatile"
-    ], # AI diagnos lsp: This groq configuration was tested and proved to be functional. 
+    ],
 
-    "use_cerebras": True,
     "model_cerebras":  "openai/gpt-oss-120b",
     "fallback_models_cerebras": [ ],
 
@@ -106,13 +100,18 @@ DEFAULT_CONFIG: user_config = {
         "ttl_until_deletion": 2592000,
         "ttl_until_invalidation": 15
     },
-    "plugins": {
+    "plugin_parsers": {
         ".py": "/the/example/path/for/ya/to/see/how/this/works"
+    },
+    "prompt_overrides": {
+        ".example": "/the/example/path/to/overrides.py"
     },
     'api_key_gemini': "",
     'api_key_groq': "",
     "api_key_openrouter": "",
     'api_key_cerebras': "",
-    "api_key_huggingface": ""
+    "api_key_huggingface": "",
+    'api_key_claude': "",
+    'api_key_openai': ""
 
 }

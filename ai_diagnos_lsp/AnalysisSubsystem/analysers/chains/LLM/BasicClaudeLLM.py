@@ -6,4 +6,7 @@ def BasicClaudeLLMFactoryFunction(
         api_key_claude: str,
         model_claude: str
         ) -> ChatAnthropic
-    return ChatAnthropic(api_key=api_key_claude, model=model_claude)
+
+    llm = ChatAnthropic(api_key=api_key_claude, model=model_claude)
+
+    return llm 

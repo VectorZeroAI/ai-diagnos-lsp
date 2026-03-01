@@ -12,14 +12,14 @@ from .default_config import DEFAULT_CONFIG
 
 def main():
     """
-    The server setup function. 
+    The server setup and startup function. Also registeres the handlers.
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.14 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v0.15 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
         """
-        The configuration getting and saving function. 
+        The configuration getting and saving function.
         pretty much sets the ls.config map
 
         and returns the capabilities of the server
@@ -71,7 +71,7 @@ def main():
 
     @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
     def did_open(ls: AIDiagnosLSP, params: types.DidOpenTextDocumentParams):
-        """ Try to load saved diagnostics forthe file, if fails, analyse.  """
+        """ Try to load saved diagnostics for the file, if fails, analyse.  """
 
         doc = ls.workspace.get_text_document(params.text_document.uri)
 
@@ -146,7 +146,7 @@ def main():
         """
         Analyses a document by URI . REQUIRES a URI as its parameter 
         
-        With what analysers it analyses is desided by the configuration at the event command of the Analysis Subsystem
+        With what analysers it analyses is decided by the configuration at the event command of the Analysis Subsystem
         """
 
         assert params is not None
@@ -154,14 +154,13 @@ def main():
         uri = "".join(params)
         doc = ls.workspace.get_text_document(uri)
         ls.AnalysisSubsystem.submit_document_for_analysis(doc, "command")
-        # TODO : Add good logging
     
     @server.command("Clear.AIDiagnostics")
     def ClearAIDiagnostics(ls: AIDiagnosLSP, params: Sequence[str]):
         """
         Clears AI diagnostics for the provided URI.
 
-        Non persistant, doesnt delete them from the DB. 
+        Non persistent, doesnt delete them from the DB. 
         To delete from the database, please delete the database. 
         In the future, delete will be added. 
 

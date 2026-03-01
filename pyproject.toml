@@ -8,11 +8,12 @@ dependencies = [
     "json-repair>=0.1.5",
     "langchain>=1.2.9",
     "langchain-cerebras>=0.7.0",
-    "langchain-google-genai[standart]>=4.2.0",
+    "langchain-google-genai>=4.2.0",
     "langchain-groq>=1.0.0",
     "langchain-huggingface>=1.0.0",
     "langchain-openai>=1.1.7",
     "pygls>=2.0.1",
+    "langchain-anthropic>=0.3"
 ]
 
 [project.scripts]

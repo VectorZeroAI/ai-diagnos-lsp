@@ -47,7 +47,11 @@ def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
                     fallback_models_groq=config.get("fallback_models_groq"),
                     model_cerebras=config['model_cerebras'],
                     fallback_models_cerebras=config.get('falback_models_cerebras'),
-                    model_huggingface=config['model_huggingface']
+                    model_huggingface=config['model_huggingface'],
+                    model_openai=config['model_openai'],
+                    model_claude=config['model_claude'],
+                    api_key_claude=config['api_key_claude'],
+                    api_key_openai=config['api_key_openai']
                     )
 
         elif config["use"] == 'gemini':

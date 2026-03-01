@@ -39,6 +39,10 @@ class __DefaultConfigType(TypedDict):
 
     model_huggingface: str
 
+    model_openai: str
+
+    model_claude: str
+
     AnalysisSubsystem: AnalysisSubsystemConfig
     CrossFileAnalysis: CrossFileAnalysisConfig
     DiagnosticsSubsystem: DiagnosticsSubsystemConfig
@@ -72,6 +76,8 @@ DEFAULT_CONFIG: user_config = {
     "model_openrouter": "tngtech/tng-r1t-chimera:free",
 
     "model_huggingface": "Qwen2.5-Coder-7B-Instruct",
+    "model_openai": "",
+    "model_claude": "",
 
     "model_groq": "openai/gpt-oss-120b",
     "fallback_models_groq": [

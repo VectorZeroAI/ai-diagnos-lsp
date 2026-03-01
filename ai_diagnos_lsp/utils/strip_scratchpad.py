@@ -13,11 +13,11 @@ def find_json_inside_str(string: str) -> str:
         return ""
 
     for index, char in enumerate(reversed_string):
-        if char == r'{':
-            depth = depth - 1
-        if char == r'}':
-            depth = depth + 1
-        if depth == 1:
+        if char == '}':
+            depth += 1
+        elif char == '{':
+            depth -= 1
+        if depth == 0:
             end = index
             break
 
@@ -32,6 +32,8 @@ def strip_scratchpad(input_msg: AIMessage) -> AIMessage:
     to_string = StrOutputParser()
     content = to_string.invoke(input_msg)
     pattern = r"<think>.*?</think>"
+
+    content.strip()
 
     if content.startswith(r'<think>'):
         if r'</think>' in content:

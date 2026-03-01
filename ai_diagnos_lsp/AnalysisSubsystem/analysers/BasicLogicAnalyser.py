@@ -5,6 +5,7 @@ from langchain_core.runnables import RunnableLambda
 from lsprotocol import types
 from pygls.workspace import TextDocument
 from pathlib import Path
+from urllib.parse import urlparse
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 
@@ -26,8 +27,12 @@ def BasicLogicAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP):
     try:
 
         llm = LlmFactoryWithConfig(ls.config)
+        if isinstance(document, TextDocument):
+            filetype = Path(urlparse(document.uri).path).suffix
+        else:
+            filetype = document.suffix
         
-        prompt = BasicLogicAnalysisPromptFactory()
+        prompt = BasicLogicAnalysisPromptFactory(ls.config, filetype)
 
         repairs = RunnableLambda(optional_repair_json)
 

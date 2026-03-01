@@ -67,3 +67,66 @@ Issue priority categories:
 
 {FOOTER}
 """
+
+def cross_file_logic_analysis_prompt_function(overrides: dict[str, str]) -> str:
+
+    ovrd = overrides
+    return f"""
+    {ovrd["TASK"]}
+
+    Issue priority categories:
+    - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions)
+    - Consistency errors (variable naming conflicts, type mismatches, contradictory state)
+
+    {ovrd["LOGIC_ERRORS_DESC"]}
+
+    {ovrd["CONSISTENCY_ERROR_DESC"]}
+
+    {ovrd["FORMAT_DESC"]}
+
+    {ovrd["NOTE"]}
+
+    ------ BEGIN GOOD EXAMPLES ----------
+
+    {ovrd["GOOD_EXAMPLES"]}
+
+    {ovrd["COT_EXAMPLES"]}
+
+    ------ END GOOD EXAMPLES -------------
+
+    ------ BEGIN BAD EXAMPLES [ DONT DO THIS ] ----------
+
+    {ovrd["BAD_EXAMPLES"]}
+
+    ------ END BAD EXAMPLES [ DONT DO THIS ] ----------
+
+    {ovrd["CROSS_FILE_NOTE"]}
+
+    {ovrd["FOOTER"]}
+    """
+
+def general_logic_analysis_system_prompt_with_overrides(overrides: dict[str, str]) -> str:
+    ovrd = overrides
+
+    return f"""
+    {ovrd["TASK"]}
+
+    Issue priority categories:
+    - Logic errors (incorrect conditions, unreachable code, infinite loops, contradictions)
+    - Consistency errors (variable naming conflicts, type mismatches, contradictory state)
+
+    {ovrd["LOGIC_ERRORS_DESC"]}
+    {ovrd["CONSISTENCY_ERROR_DESC"]}
+    {ovrd["FORMAT_DESC"]}
+    {ovrd["NOTE"]}
+
+    ------ BEGIN GOOD EXAMPLES ----------
+    {ovrd["GOOD_EXAMPLES"]}
+
+    {ovrd["COT_EXAMPLES"]}
+    ------ END GOOD EXAMPLES -------------
+    ------ BEGIN BAD EXAMPLES [ DONT DO THIS ] ----------
+    {ovrd["BAD_EXAMPLES"]}
+    ------ END BAD EXAMPLES [ DONT DO THIS ] ----------
+    {ovrd["FOOTER"]}
+    """

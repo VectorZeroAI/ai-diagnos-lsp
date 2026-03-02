@@ -30,6 +30,37 @@ Your main focus is to find consistency issues.
 {FOOTER}
 """
 
+def basic_style_analysis_prompt_function(overrides: dict[str, str]) -> str:
+    ovrd = overrides
+
+    return f"""
+    {overrides["TASK"]}
+
+    Your main focus is to find consistency issues. 
+
+    {ovrd["CONSISTENCY_ERROR_DESC"]}
+
+    {ovrd["FORMAT_DESC"]}
+
+    {ovrd["NOTE"]}
+
+    ------ BEGIN EXAMPLES --------
+
+    {ovrd["GOOD_EXAMPLES"]}
+
+    {ovrd["COT_EXAMPLES"]}
+
+    ------ END EXAMPLES -----------
+
+    ------ BEGIN BAD EXAMPLES [ DONT DO THIS ] --------
+
+    {ovrd["BAD_EXAMPLES"]}
+
+    ------ END BAD EXAMPLES [ DONT DO THIS ] -----------
+
+    {ovrd["FOOTER"]}
+    """
+
 CROSS_FILE_STYLE_ANALYSIS_PROMPT = f"""
 {TASK}
 
@@ -59,3 +90,35 @@ Your main focus is finding consistency errors.
 
 {FOOTER}
 """
+
+def cross_file_style_analysis_prompt_function(overrides: dict[str, str]) -> str:
+    ovrd = overrides
+    return f"""
+    {ovrd["TASK"]}
+
+    Your main focus is finding consistency errors. 
+
+    {ovrd["CONSISTENCY_ERROR_DESC"]}
+
+    {ovrd["FORMAT_DESC"]}
+
+    {ovrd["CROSS_FILE_NOTE"]}
+
+    {ovrd["NOTE"]}
+
+    ------ BEGIN EXAMPLES --------
+
+    {ovrd["GOOD_EXAMPLES"]}
+
+    {ovrd["COT_EXAMPLES"]}
+
+    ------ END EXAMPLES -----------
+
+    ------ BEGIN BAD EXAMPLES [ DONT DO THIS ] --------
+
+    {ovrd["BAD_EXAMPLES"]}
+
+    ------ END BAD EXAMPLES [ DONT DO THIS ] -----------
+
+    {ovrd["FOOTER"]}
+    """

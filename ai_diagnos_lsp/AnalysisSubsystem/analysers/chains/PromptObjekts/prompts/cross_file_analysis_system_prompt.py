@@ -39,6 +39,9 @@ Issue priority categories:
 """
 
 def cross_file_analysis_system_prompt_function(overrides: dict[str, str]) -> str:
+    """
+    Assembles the prompt with the overrides. The constant version is static with no overrides available.
+    """
     ovrd = overrides
     return f"""
     {ovrd["TASK"]}

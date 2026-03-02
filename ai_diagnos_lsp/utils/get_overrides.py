@@ -11,6 +11,11 @@ if TYPE_CHECKING:
     from ai_diagnos_lsp.default_config import user_config
 
 def get_overrides(config: user_config, filetype: str) -> dict[str, str]:
+    """
+    The function that gets the overrides for the configuration and filetype. 
+    If no overrides were found, RETURNS DEFAULTS.
+    THE DEFAULTING LOGIC HAPPENDS HERE.
+    """
     if config['prompt_overrides'].get(filetype) is not None:
         overrides = importlib.import_module(config['prompt_overrides'].get(filetype))
 

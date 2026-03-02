@@ -22,6 +22,8 @@ from .chains.PromptObjekts.CrossFileAnalysisPrompt import CrossFileAnalysisPromp
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
 from ai_diagnos_lsp.utils.strip_scratchpad import strip_scratchpad
 
+from urllib.parse import urlparse
+
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
@@ -59,7 +61,12 @@ def CrossFileAnalyserWorkerThread(ls: AIDiagnosLSP, file: TextDocument | Path):
 
         llm = LlmFactoryWithConfig(ls.config)
 
-        prompt = CrossFileAnalysisPromptFactory()
+        if isinstance(file, TextDocument):
+            filetype = Path(urlparse(file.uri).path).suffix
+        else:
+            filetype = file.suffix
+
+        prompt = CrossFileAnalysisPromptFactory(ls.config, filetype)
 
         repairs = RunnableLambda(optional_repair_json)
 

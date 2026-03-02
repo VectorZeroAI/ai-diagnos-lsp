@@ -11,9 +11,10 @@ if TYPE_CHECKING:
     from ai_diagnos_lsp.default_config import user_config
 
 def get_overrides(config: user_config, filetype: str) -> dict[str, str]:
-    overrides = importlib.import_module(config['prompt_overrides'].get(filetype))
+    if config['prompt_overrides'].get(filetype) is not None:
+        overrides = importlib.import_module(config['prompt_overrides'].get(filetype))
 
-    ovrd = {
+        ovrd = {
             "TASK": getattr(overrides, "TASK", TASK),
             "NOTE": getattr(overrides, "NOTE", NOTE),
             "LOGIC_ERRORS_DESC": getattr(overrides, "LOGIC_ERRORS_DESC", LOGIC_ERRORS_DESC),
@@ -24,4 +25,16 @@ def get_overrides(config: user_config, filetype: str) -> dict[str, str]:
             "BAD_EXAMPLES": getattr(overrides, "BAD_EXAMPLES", BAD_EXAMPLES),
             "FOOTER": getattr(overrides, "FOOTER", FOOTER),
             }
+    else:
+        ovrd = {
+                "TASK": TASK,
+                "NOTE": NOTE,
+                "LOGIC_ERRORS_DESC":LOGIC_ERRORS_DESC,
+                "CONSISTENCY_ERROR_DESC": CONSISTENCY_ERROR_DESC,
+                "FORMAT_DESC": FORMAT_DESC,
+                "GOOD_EXAMPLES":GOOD_EXAMPLES,
+                "COT_EXAMPLES":COT_EXAMPLES,
+                "BAD_EXAMPLES":BAD_EXAMPLES,
+                "FOOTER":FOOTER,
+                }
     return ovrd

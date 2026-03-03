@@ -1,67 +1,3 @@
-GOOD_EXAMPLES = """
---------
-GOOD EXAMPLE:
-{
-"diagnostics": [
-    {
-        "start": "The small wrong spot",
-        "end": "The small wrong spot",
-        "error_message": "Explanation of what is wrong there",
-        "severity_level": 1
-    },
-    {
-        "start": "A big wrong spot start",
-        "end": "A big wrong spot end",
-        "error_message": "Explanation of what is wrong there",
-        "severity_level": 2
-    }
-]
-}
--------
-GOOD EXAMPLE:
-{
-"diagnostics": [
-    {
-        "start": "if (x > 10 && x < 5)",
-        "end": "&& y < 5)",
-        "error_message": "Logic error: condition can never be true (x cannot be simultaneously greater than 10 and less than 5)",
-        "severity_level": 1
-    }
-]
-}
--------
-If a location occurs multiple times, you must specify which occurrence you mean, like this: 
-GOOD EXAMPLE:
-{
-"diagnostics": [
-    {
-        "start": ["de grep():", 2],
-        "end": ["de grep():", 2],
-        "error_message": "misspelled def keyword inside function definition",
-        "severity_level": 1
-    }
-]
-}
-This example means the second occurrence of the "de grep():" pattern inside the code file. 
-------
-If you dont find any issues, output exactly this:
-GOOD EXAMPLE:
-{
-"diagnostics": []
-}
-"""
-
-
-BAD_EXAMPLES = """
-BAD EXAMPLE:
-```json
-{
-"diagnostics": []
-}
-```
-"""
-
-
 COT_EXAMPLES = """
 GOOD EXAMPLE:
 <think>Lets examine the code step by step first. What language is this code? Its abc? Is it? Yes it is. 
@@ -70,6 +6,16 @@ Yes it does. Is it though? No it isnt, because in the abc language imports can n
 Should this be included in the final diagnostic? Yes it should. But at what severity level?
 2. Why? Because the system prompt says that we should mark syntax errors as 1, wait so actually 1? Yes, actually it says syntax errors go to severity level one.
 Did we make a mistake? No we didnt. Lets now move on to the next section of the file.</think>
+{
+    "diagnostics": [
+        {
+            "start": "import xyz",
+            "end": "import xyz",
+            "error_message": "Invalid import: abc language does not allow importing 'xyz'.",
+            "severity_level": 1
+        }
+    ]
+}
 
 GOOD EXAMPLE:
 <think>Lets examine the code step by step first. What language is this code? Its abc? Is it? Yes it is. 
@@ -79,6 +25,16 @@ Wait, so we dont? Lets take a step back and take a different approach. So we see
 we dont know what that library is, so, is it part of stdlib? No. Why? Wait, actually yes. Why? Wait actually we dont know.
 Lets take a different approch. As we know, we dont know what the library is, so it potentially doesnt exist.
 Lets put it exactly like that into the final diagnostic.</think>
+{
+    "diagnostics": [
+        {
+            "start": "import b",
+            "end": "import b",
+            "error_message": "Unknown library 'b': this module is not recognized as part of the standard library and may not exist.",
+            "severity_level": 3
+        }
+    ]
+}
 
 GOOD EXAMPLE:
 <think>
@@ -93,6 +49,40 @@ Now, let's assess severity. According to the guidelines, syntax errors are level
 The undefined variables (value and condition) are secondary—they would only matter after syntax errors are resolved. The import issue is a warning.
 So the final diagnostic should highlight the syntax errors first. The code cannot run until those are fixed. After that, the undefined variables need to be addressed, and the import might be a note.
 </think>
+{
+    "diagnostics": [
+        {
+            "start": "import xyz",
+            "end": "import xyz",
+            "error_message": "Unknown import 'xyz': not found in standard library; third-party modules require an explicit module declaration.",
+            "severity_level": 3
+        },
+        {
+            "start": "result = param * 2",
+            "end": "return result",
+            "error_message": "Syntax error: function body must be indented in abc. Lines inside 'calculate' are not indented.",
+            "severity_level": 1
+        },
+        {
+            "start": "print('Hello')",
+            "end": "print('Hello')",
+            "error_message": "Syntax error: body of 'if' block must be indented.",
+            "severity_level": 1
+        },
+        {
+            "start": "print(value)",
+            "end": "print(value)",
+            "error_message": "Logical error: 'value' is referenced but never defined.",
+            "severity_level": 2
+        },
+        {
+            "start": "if condition:",
+            "end": "if condition:",
+            "error_message": "Logical error: 'condition' is referenced but never defined.",
+            "severity_level": 2
+        }
+    ]
+}
 
 GOOD EXAMPLE:
 <think>Lets walk through the code line by line!
@@ -110,7 +100,8 @@ Why? Oh wait, it actually isnt correct, because the the type of z does not conta
 Wait, it is. Wait, it isnt. Are we sure? No, because we cant decide. We are not sure, but a potential issue is still an issue? Is it ?
 No it isnt, wait it is? What does the system prompt say about that? It doesnt specify anything.
 Lets mark the issue as severity level 3, and move on. Is there anything left to unexamined? No there isnt.
-Should we write the diagnostic? Yes we should.<think/>
+Should we write the diagnostic? Yes we should.
+</think>
 {
     "diagnostics": [
         {
@@ -122,3 +113,4 @@ Should we write the diagnostic? Yes we should.<think/>
     ]
 }
 """
+

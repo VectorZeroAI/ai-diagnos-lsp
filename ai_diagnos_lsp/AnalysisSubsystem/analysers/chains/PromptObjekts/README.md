@@ -2,11 +2,30 @@
 
 This is the directory for prompt objects. 
 
-> [!IMPORTANT]
-> prompts are not hardcoded, they are imported from the prompts directory, where the actual text is located.
+Each prompt is a factory function, because there is a feature of overridability of the parts of the prompts. 
+That requires computing the overrides for the prompt right before creation of the prompt object, wich makes a factory function actually good design. 
 
-> [!IMPORTANT]
-> Each prompt object has to be gotten via a factory function, and has to have a factory function.
+## Prompt Overrides
+The overriding is structured as following: the user config @ prompt_overrides @ file suffix = path of the python file of the overrides. 
+Then each element from inside SHARED and EXEMPLARS ([details here](./prompts/README.md)) is extracted and inputed, if one is present, else the default located at SHARED or EXEPLARS is inputed into the system prompt. 
+
+An example override file would look like this: 
+```python
+GOOD_EXAMPLES = """
+{
+    "diagnostics": [
+        {
+            "start": "example",
+            "end": "example",
+            "error_message": "example",
+            ...
+        }
+    ]
+}
+"""
+```
+
+For the full list of all the overridable parts of the prompt, see the table under [here](./prompts/README.md).
 
 ## Contribution
 

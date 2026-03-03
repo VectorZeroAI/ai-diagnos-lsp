@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from langchain_core.runnables import RunnableLambda
 from lsprotocol import types
 from pygls.workspace import TextDocument
-from pathlib import Path
-from langchain_core.runnables import Runnable, RunnableLambda
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
-
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.CrossFileStylePrompt import CrossFileStyleAnalysisPromptFactory
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import (
+    GeneralDiagnosticsOutputParserFactory,
+)
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.CrossFileStylePrompt import (
+    CrossFileStyleAnalysisPromptFactory,
+)
 from ai_diagnos_lsp.utils.analyser.chain_invoker import chain_invoker_function_cross_file
 from ai_diagnos_lsp.utils.analyser.llm_generator import LlmFactoryWithConfig
 from ai_diagnos_lsp.utils.json_repair import optional_repair_json
@@ -28,7 +32,12 @@ def CrossFileStyleAnalyserWorker(document: TextDocument | Path, ls: AIDiagnosLSP
 
         llm = LlmFactoryWithConfig(ls.config)
         
-        prompt = CrossFileStyleAnalysisPromptFactory()
+        if isinstance(document, TextDocument):
+            filetype = Path(document.path).suffix
+        else:
+            filetype = document.suffix
+        
+        prompt = CrossFileStyleAnalysisPromptFactory(ls.config, filetype)
 
         repairs = RunnableLambda(optional_repair_json)
 

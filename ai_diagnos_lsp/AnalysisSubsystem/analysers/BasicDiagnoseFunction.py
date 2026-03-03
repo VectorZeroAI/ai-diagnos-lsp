@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from langchain_core.runnables import Runnable, RunnableLambda
 from pygls.workspace import TextDocument
 from pathlib import Path
+from urllib.parse import urlparse
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsOutputParserFactory
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.BasicAnalysisPrompt import BasicAnalysisPromptFactory
@@ -23,7 +24,13 @@ def BasicDiagnoseFunctionWorker(document: TextDocument | Path, ls: AIDiagnosLSP)
     try:
 
         llm = LlmFactoryWithConfig(ls.config)
-        prompt = BasicAnalysisPromptFactory()
+
+        if isinstance(document, TextDocument):
+            filetype = Path(document.path).suffix
+        else:
+            filetype = document.suffix
+
+        prompt = BasicAnalysisPromptFactory(ls.config, filetype)
         output = GeneralDiagnosticsOutputParserFactory()
 
         repairs = RunnableLambda(optional_repair_json)

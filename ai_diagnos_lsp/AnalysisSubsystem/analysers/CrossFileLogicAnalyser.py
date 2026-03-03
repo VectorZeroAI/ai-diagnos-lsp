@@ -54,7 +54,12 @@ def CrossFileLogicAnalyser(ls: AIDiagnosLSP, file: TextDocument | Path):
         if LOG:
             logging.info("Cross File analyser Worker thread started")
 
-        prompt = CrossFileLogicAnalysisPromptFactory()
+        if isinstance(file, TextDocument):
+            filetype = Path(file.path).suffix
+        else:
+            filetype = file.suffix
+
+        prompt = CrossFileLogicAnalysisPromptFactory(ls.config, filetype)
 
         llm = LlmFactoryWithConfig(ls.config)
 

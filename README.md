@@ -15,9 +15,11 @@ A Python‑based Language Server that provides AI‑powered diagnostics using La
 - **Custom LSP commands** – trigger analysis, clear AI diagnostics. 
 - **omni language support** - LLM based analysis is omnilingual, the only changes that need to be done per language are the parsers, wich there is a nice plugin system to write yourself. 
     Theres also a repo for publishing parsers [here](https://github.com/VectorZeroAI/ParserPlugins).
+- **prompt overridability** - prompts are overridable, allowing fine tuned functionality per language.
 
 > [!NOTE]
 > The core will only include a parser for python. Parsers for every other language must be be added via plugins. See [here](#plugins)
+> Prompt overrides per language for finer performance can also be found on [here](#plugins)
 
 ## Requirements
 
@@ -51,21 +53,21 @@ The options mirror those of the Neovim plugin. Below is the complete set of opti
 
 | Option                        | Type                | Default                                   | Description |
 |-------------------------------|---------------------|-------------------------------------------|-------------|
-| `api_key_openrouter`          | `string`            | –                                         | OpenRouter API key (required for OpenRouter or Omniprovider). |
-| `api_key_gemini`              | `string`            | –                                         | Gemini API key (required for Gemini or Omniprovider). |
-| `api_key_groq`                | `string`            | –                                         | Groq API key (required for Groq or Omniprovider). |
-| `api_key_cerebras`            | `string`            | –                                         | Cerebras API key (required for Cerebras or Omniprovider). |
-| `api_key_huggingface`         | `string`            | –                                         | HuggingFace API key (required for HuggingFace support, currently only used in Omniprovider). |
-| `use_gemini`                  | `boolean`           | `false`                                   | Enable only Gemini. |
-| `use_openrouter`              | `boolean`           | `false`                                   | Enable only OpenRouter. |
-| `use_groq`                    | `boolean`           | `false`                                   | Enable only Groq. |
-| `use_cerebras`                | `boolean`           | `false`                                   | Enable only Cerebras. |
-| `use_omniprovider`            | `boolean`           | `true`                                    | Try OpenRouter → Gemini → Groq → Cerebras → HuggingFace (keys for all providers should be provided, empty strings skip that provider). |
+| `api_key_openrouter`          | `string`            | –                                         | OpenRouter API key. |
+| `api_key_gemini`              | `string`            | –                                         | Gemini API key. |
+| `api_key_groq`                | `string`            | –                                         | Groq API key. |
+| `api_key_cerebras`            | `string`            | –                                         | Cerebras API key. |
+| `api_key_huggingface`         | `string`            | –                                         | HuggingFace API key. |
+| `api_key_openai` | `string` | - | OpenAI API key. (For openai usage) |
+| `api_key_claude`| `string` | - | Claude API key. (For claude provider usage) |
+| `use` | `string` | `Omniprovider` | Wich provider to use. Omniprovider jumps through all the providers one after the other |
 | `model_openrouter`            | `string`            | `"tngtech/tng-r1t-chimera:free"`          | Model name for OpenRouter. |
 | `model_gemini`                | `string`            | `"gemini-2.5-flash-lite"`                 | Model name for Gemini. |
 | `model_groq`                  | `string`            | `"openai/gpt-oss-120b"`                   | Model name for Groq. |
 | `model_cerebras`              | `string`            | `"openai/gpt-oss-120b"`                   | Model name for Cerebras. |
-| `model_huggingface`           | `string`            | `"Qwen2.5-Coder-7B-Instruct"`             | Model name for HuggingFace (used in Omniprovider). |
+| `model_huggingface`           | `string`            | `"Qwen2.5-Coder-7B-Instruct"`             | Model name for HuggingFace. |
+| `model_openai`                | `string`            | `"gpt-5.2"` | Model name for openai |
+| `model_claude`                | `string`            | `"claude-sonnet-4-6"` | Model name for claude provider |
 | `fallback_models_gemini`      | `array` of `string` | `["gemini-2.5-flash", "gemini-3-flash-preview"]` | Fallback models for Gemini. |
 | `fallback_models_groq`        | `array` of `string` | `["openai/gpt-oss-20b", "openai/gpt-oss-safeguard-20b", "qwen/qwen3-32b", "llama-3.3-70b-versatile"]` | Fallback models for Groq. |
 | `fallback_models_cerebras`    | `array` of `string` | `[]`                                      | Fallback models for Cerebras. |
@@ -79,8 +81,6 @@ The options mirror those of the Neovim plugin. Below is the complete set of opti
 | `CrossFileAnalysis`           | `object`            | See below                                 | Cross‑file analysis specific settings. |
 | `DiagnosticsSubsystem`        | `object`            | See below                                 | Database and TTL settings. |
 | `plugins`                     | `object`            | See below                                 | Add your own parsers per language, to enable omnilang cross file diagnostics. |
-
-> **Note**: Only **one** of `use_gemini`, `use_openrouter`, `use_groq`, `use_cerebras`, or `use_omniprovider` should be `true` at a time. The Omniprovider is the default and attempts to use all providers whose API keys are provided (empty strings skip that provider). HuggingFace is currently only used as part of the Omniprovider.
 
 ### AnalysisSubsystem
 
@@ -142,8 +142,45 @@ The options mirror those of the Neovim plugin. Below is the complete set of opti
 
 ### plugins
 
-Currently it is a dictionary mapping file extensions (e.g. `".py"`) to paths of parser executables.
-The parser must follow the protocol described in the [Parser Protocol](#parser-protocol) section below.
+In the current plugin system, there are 2 plugin types:
+1. Parsers
+2. Prompts
+
+Any plugins can be found in the plugin repo. TODO: ADD THE LINK HERE
+
+To make the LSP have first class support for a language, you must find first class parser for the language and a first class Prompt for the language. You can write these yourself as well, making them specific to your needs.
+
+#### Prompts
+
+These are the prompt_overrides, wich are overrides over the normal prompt parts, wich are also activated per filetype, wich enables dedicated 
+per langage support, wich can greatly increase the performance in that specific language. 
+
+The prompt overrides are python files, containing any of the following constant strings:
+- TASK
+- NOTE
+- CROSS_FILE_NOTE
+- LOGIC_ERRORS_DESC
+- CONSISTENCY_ERROR_DESC
+- FORMAT_DESC
+- FOOTER
+- GOOD_EXAMPLES
+- COT_EXAMPLES
+- BAD_EXAMPLES
+
+The plugin system will automatically load the python file and get all the overrides that exist. 
+
+##### EXAMPLE:
+```python
+TASK = """Your task is to find memory leaks"""
+NOTE = """Focus on memory leaks"""  
+FOOTER= """Focus on memory leaks. Dont forget memory leaks."""
+```
+
+#### Plugins
+
+These are the plugins that allow the cross file analysis to work with filetypes other then python. 
+You can find them in the plugin repo, for their respective language.
+The parsers must follow the protocol described in the [Parser Protocol](#parser-protocol) section below.
 
 ## Architecture
 
@@ -163,9 +200,9 @@ The server is built with [`pygls`](https://pygls.readthedocs.io/) and organised 
 4. Analyser builds the appropriate chain and invokes the LLM.
 5. LLM returns a JSON‑formatted list of diagnostics (using the Pydantic model `GeneralDiagnosticsPydanticObjekt`).
 6. The JSON formatted list of diagnostics gets json fixed if broken, and stripped of the chain of thoughts the model may have produced. 
-6. Analyser calls `DiagnosticsHandlingSubsystem.save_new_diagnostic()` to store the result.
-7. It then calls `load_diagnostics_for_file()` which retrieves all stored diagnostics for that file, converts them to LSP `Diagnostic` objects (using snippet matching via `grep`), and updates the server’s in‑memory cache.
-8. Finally, the server sends a `workspace/diagnostic/refresh` request to notify the client to pull updated diagnostics.
+7. Analyser calls `DiagnosticsHandlingSubsystem.save_new_diagnostic()` to store the result.
+8. It then calls `load_diagnostics_for_file()` which retrieves all stored diagnostics for that file, converts them to LSP `Diagnostic` objects (using snippet matching via `grep`), and updates the server’s in‑memory cache.
+9. Finally, the server sends a `workspace/diagnostic/refresh` request to notify the client to pull updated diagnostics.
 
 > [!NOTE]
 > Due to the fact that neovims support for the pull LSprotocol is incomplete, I also made the language server push the diagnostics once they are loaded. 
@@ -203,7 +240,7 @@ Common issues:
 ## Contributions
 
 Contributions are welcome - especially new parsers.
-I will be creating a repo as a way to distribute the plugin parsers.
+Plugin repo is [here]() TODO: ADD IT HERE
 
 ### Parser Protocol
 
@@ -227,7 +264,7 @@ A plugin parser is a single executable that acts as a parser function, that gets
 ```
 
 > [!NOTE]
-> stdin is used, not command-line arguments.
+> stdin is used, not arguments.
 
 ## License
 

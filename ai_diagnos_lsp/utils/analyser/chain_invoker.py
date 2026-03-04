@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from typing import TYPE_CHECKING, Any
 import threading
 from pathlib import Path
@@ -51,7 +50,7 @@ def chain_invoker_function_cross_file(document: TextDocument | Path, config: use
                             scope=config['CrossFileAnalysis']['scope'],
                             analysis_max_depth=config['CrossFileAnalysis'].get('max_analysis_depth'),
                             max_string_size_char=config['CrossFileAnalysis'].get('max_string_size_char'),
-                            plugins=config.get("plugins")
+                            plugins=config.get("plugin_parsers")
                             )
 
                 if isinstance(document, TextDocument):

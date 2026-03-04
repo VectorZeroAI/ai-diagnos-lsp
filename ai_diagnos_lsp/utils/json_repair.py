@@ -41,6 +41,7 @@ def optional_repair_json(input_msg: AIMessage) -> AIMessage:
 
         parser = StrOutputParser()
         content = parser.invoke(input_msg)
+        content = content.strip()
         
         assert isinstance(content, str)
         if is_valid_json(content):

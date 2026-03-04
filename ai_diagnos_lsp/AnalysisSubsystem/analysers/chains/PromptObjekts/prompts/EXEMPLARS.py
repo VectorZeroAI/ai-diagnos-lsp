@@ -1,5 +1,150 @@
+GOOD_EXAMPLES = """
+EVERY EXAMPLE BELOW FOLLOWS THIS STRUCTURE:
+
+<think>
+[YOUR ACTUAL REASONING GOES HERE - THIS IS A PLACEHOLDER]
+</think>
+{ "diagnostics": [...] }
+
+THE PLACEHOLDER ABOVE REPRESENTS MANDATORY COMPREHENSIVE REASONING.
+DO NOT output JSON without first completing a thorough think block like the one above.
+DO NOT write short or superficial thinking. The quality of diagnostics depends on the depth of reasoning.
+
+-------- GOOD EXAMPLE (single-line span, severity 1 ERROR - contradictory condition): --------
+<think>...</think>
+{
+"diagnostics": [
+    {
+        "start": "if user_age < 0 and user_age > 150:",
+        "end": "if user_age < 0 and user_age > 150:",
+        "error_message": "Contradictory condition: a value cannot be simultaneously less than 0 and greater than 150. This branch is unreachable.",
+        "severity_level": 1
+    }
+]
+}
+
+-------- GOOD EXAMPLE (multi-line span, severity 1 ERROR - variable used before assignment): --------
+<think>...</think>
+{
+"diagnostics": [
+    {
+        "start": "def process_order(cart):",
+        "end": "return total_price",
+        "error_message": "'total_price' is used in the return statement but is only assigned inside the 'if cart:' branch. If cart is empty or falsy, total_price will be undefined at the return.",
+        "severity_level": 1
+    }
+]
+}
+
+-------- GOOD EXAMPLE (occurrence index - targeting a repeated token): --------
+If a snippet appears more than once in the file, specify which occurrence using ["snippet", N] where N is 1-based.
+<think>...</think>
+{
+"diagnostics": [
+    {
+        "start": ["except Exception:", 2],
+        "end": ["except Exception:", 2],
+        "error_message": "Bare 'except Exception' silently swallows all errors. Catch specific exception types instead, or at minimum log the error before continuing.",
+        "severity_level": 2
+    }
+]
+}
+This targets the SECOND occurrence of 'except Exception:' in the file, not the first.
+
+-------- GOOD EXAMPLE (all four severity levels - one diagnostic per level): --------
+<think>...</think>
+{
+"diagnostics": [
+    {
+        "start": "if user_count < 0 and user_count > 1000:",
+        "end": "if user_count < 0 and user_count > 1000:",
+        "error_message": "Contradictory condition: user_count cannot be simultaneously less than 0 and greater than 1000. This branch is unreachable.",
+        "severity_level": 1
+    },
+    {
+        "start": "result = db.find_user(user_id)",
+        "end": "print(result.name)",
+        "error_message": "db.find_user() can return None but result.name is accessed without a None check. This will raise AttributeError if the user is not found.",
+        "severity_level": 2
+    },
+    {
+        "start": "def Calculate_Total(ItemList):",
+        "end": "def Calculate_Total(ItemList):",
+        "error_message": "Function name 'Calculate_Total' and parameter 'ItemList' use PascalCase. PEP8 convention for Python functions and parameters is snake_case (calculate_total, item_list).",
+        "severity_level": 3
+    },
+    {
+        "start": "results = []",
+        "end": "return results",
+        "error_message": "This pattern (initialise empty list, append in loop, return) can be expressed more concisely as a list comprehension, which is also faster.",
+        "severity_level": 4
+    }
+]
+}
+
+-------- GOOD EXAMPLE (no issues found - output exactly this): --------
+<think>...</think>
+{
+"diagnostics": []
+}
+"""
+
+BAD_EXAMPLES = """
+-------- BAD EXAMPLE (markdown code fences are forbidden): --------
+```json
+{
+"diagnostics": [
+    {
+        "start": "some_function()",
+        "end": "some_function()",
+        "error_message": "some issue",
+        "severity_level": 1
+    }
+]
+}
+```
+Do NOT wrap output in ```json ... ``` or any other markdown fence.
+
+-------- BAD EXAMPLE (invented or paraphrased snippet - start/end must be exact copies from the source): --------
+{
+"diagnostics": [
+    {
+        "start": "the loop on line 42",
+        "end": "end of loop",
+        "error_message": "off by one error",
+        "severity_level": 1
+    }
+]
+}
+'start' and 'end' must be verbatim code copied character-for-character from the file, not descriptions or paraphrases.
+
+-------- BAD EXAMPLE (two separate errors merged into one diagnostic): --------
+{
+"diagnostics": [
+    {
+        "start": "def process():",
+        "end": "return result",
+        "error_message": "Missing null check on input AND function lacks a docstring.",
+        "severity_level": 2
+    }
+]
+}
+Each diagnostic must describe exactly one issue. Split the above into two separate diagnostic objects.
+
+-------- BAD EXAMPLE (anything outside the JSON object): --------
+Here are the diagnostics I found:
+{
+"diagnostics": []
+}
+Output must be the JSON object and nothing else. No preamble, no explanation, no sign-off.
+-------- BAD EXAMPLE (broken thinking bracets) --------
+</think>{
+    "diagnostics": []
+}
+"""
+
 COT_EXAMPLES = """
-GOOD EXAMPLE:
+-------- GOOD EXAMPLE --------
 <think>Lets examine the code step by step first. What language is this code? Its abc? Is it? Yes it is. 
 Okay, we determined that the language is abc. Now, lets move on the the import section. Does it look correct?
 Yes it does. Is it though? No it isnt, because in the abc language imports can not be xyz. Is that fact true though?
@@ -17,7 +162,7 @@ Did we make a mistake? No we didnt. Lets now move on to the next section of the 
     ]
 }
 
-GOOD EXAMPLE:
+-------- GOOD EXAMPLE -------- 
 <think>Lets examine the code step by step first. What language is this code? Its abc? Is it? Yes it is. 
 Okay, we determined that the language is abc. Now, lets move on the the import section. Is the syntax there correct?
 Yes it is. We notice that the user import the library b. Do we know about the library? Yes. What is the library? Actually we dont. 
@@ -36,7 +181,7 @@ Lets put it exactly like that into the final diagnostic.</think>
     ]
 }
 
-GOOD EXAMPLE:
+-------- GOOD EXAMPLE -------- 
 <think>
 First, let's identify what we are examining. This appears to be a code snippet written in the abc language. We need to analyze it for potential issues step by step.
 Now, look at the first line: import xyz. In abc, imports are only allowed for modules that are part of the standard library or explicitly declared. Is xyz a standard module? I recall that the abc standard library includes modules like abc_base, but xyz is not among them. Could it be a third-party module? In abc, third-party modules require a module declaration at the top, which is missing here. So this import is likely invalid—a potential error, but not a syntax error.
@@ -84,7 +229,7 @@ So the final diagnostic should highlight the syntax errors first. The code canno
     ]
 }
 
-GOOD EXAMPLE:
+------ GOOD EXAMPLE: -------
 <think>Lets walk through the code line by line!
 First, lets look at the import section of the provided file.
 We see that it imports modules x, y, z that we can have in our context,

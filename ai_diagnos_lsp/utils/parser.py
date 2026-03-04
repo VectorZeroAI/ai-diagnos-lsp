@@ -75,26 +75,26 @@ def path_to_dotted(path: Path) -> str:
     return result
 
 
-def parse_source_to_ast(source: str) -> ast.Module | None:
-    global recurse_counter
+def parse_source_to_ast(source: str, recurse_counter: int) -> ast.Module | None:
     try:
         return ast.parse(source)
     except SyntaxError as e:
-        if recurse_counter < 10:
-            lines = source.splitlines()
-            if e.lineno is not None:
-                lines.pop(e.lineno)
-                recurse_counter = recurse_counter + 1
-                return parse_source_to_ast("\n".join(lines))
-
+        if recurse_counter >= 10:
+            return None
+        if e.lineno is None:
+            return None
+        lines = source.splitlines()
+        if e.lineno - 1 >= len(lines):
+            return None
+        lines.pop(e.lineno - 1)
+        return parse_source_to_ast("\n".join(lines), recurse_counter + 1)
 
 
 def parse_source(source: str) -> tuple[list[str], list[dict[Literal["name", "level", "module"], Any]]]:
     """ Parse python source code and extract import statements from it """
-    global recurse_counter
     recurse_counter = 0
 
-    tree = parse_source_to_ast(source)
+    tree = parse_source_to_ast(source, recurse_counter)
     if tree is None:
         return ([], [])
 

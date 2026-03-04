@@ -24,16 +24,12 @@ def find_json_inside_str(string: str) -> str:
     rev_json = reversed_string[:end+1]
     return rev_json[::-1]
 
-    
-
-
-
 def strip_scratchpad(input_msg: AIMessage) -> AIMessage:
     to_string = StrOutputParser()
     content = to_string.invoke(input_msg)
     pattern = r"<think>.*?</think>"
 
-    content.strip()
+    content = content.strip()
 
     if content.startswith(r'<think>'):
         if r'</think>' in content:

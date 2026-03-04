@@ -52,9 +52,9 @@ def general_analysis_system_prompt_function(overrides: dict[str, str]) -> str:
     - Syntax and semantic errors [Error]
     - Any other issues you find [Whatever you find appropriate]
 
-    {ovrd["LOGIC_ERRORS_DEC"]}
+    {ovrd["LOGIC_ERRORS_DESC"]}
 
-    {ovrd["CONSISTANCY_ERROR_DESC"]}
+    {ovrd["CONSISTENCY_ERROR_DESC"]}
 
     {ovrd["FORMAT_DESC"]}
 

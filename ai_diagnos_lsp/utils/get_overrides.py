@@ -4,7 +4,7 @@ from __future__ import annotations
 import importlib
 from typing import TYPE_CHECKING
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.prompts.SHARED import TASK, NOTE, CONSISTENCY_ERROR_DESC, FOOTER, FORMAT_DESC, LOGIC_ERRORS_DESC
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.prompts.SHARED import TASK, NOTE, CONSISTENCY_ERROR_DESC, FOOTER, FORMAT_DESC, LOGIC_ERRORS_DESC, CROSS_FILE_NOTE
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.PromptObjekts.prompts.EXEMPLARS import BAD_EXAMPLES, COT_EXAMPLES, GOOD_EXAMPLES
 
 if TYPE_CHECKING:
@@ -22,6 +22,7 @@ def get_overrides(config: user_config, filetype: str) -> dict[str, str]:
         ovrd = {
             "TASK": getattr(overrides, "TASK", TASK),
             "NOTE": getattr(overrides, "NOTE", NOTE),
+            "CROSS_FILE_NOTE": getattr(overrides, "CROSS_FILE_NOTE", CROSS_FILE_NOTE),
             "LOGIC_ERRORS_DESC": getattr(overrides, "LOGIC_ERRORS_DESC", LOGIC_ERRORS_DESC),
             "CONSISTENCY_ERROR_DESC": getattr(overrides, "CONSISTENCY_ERROR_DESC", CONSISTENCY_ERROR_DESC),
             "FORMAT_DESC":  getattr(overrides, "FORMAT_DESC", FORMAT_DESC),
@@ -34,6 +35,7 @@ def get_overrides(config: user_config, filetype: str) -> dict[str, str]:
         ovrd = {
                 "TASK": TASK,
                 "NOTE": NOTE,
+                "CROSS_FILE_NOTE": CROSS_FILE_NOTE,
                 "LOGIC_ERRORS_DESC":LOGIC_ERRORS_DESC,
                 "CONSISTENCY_ERROR_DESC": CONSISTENCY_ERROR_DESC,
                 "FORMAT_DESC": FORMAT_DESC,

@@ -46,7 +46,7 @@ def LlmFactoryWithConfig(config: user_config) -> Runnable[dict[Any, Any], Any]:
                     model_groq=config["model_groq"],
                     fallback_models_groq=config.get("fallback_models_groq"),
                     model_cerebras=config['model_cerebras'],
-                    fallback_models_cerebras=config.get('falback_models_cerebras'),
+                    fallback_models_cerebras=config.get('fallback_models_cerebras'),
                     model_huggingface=config['model_huggingface'],
                     model_openai=config['model_openai'],
                     model_claude=config['model_claude'],

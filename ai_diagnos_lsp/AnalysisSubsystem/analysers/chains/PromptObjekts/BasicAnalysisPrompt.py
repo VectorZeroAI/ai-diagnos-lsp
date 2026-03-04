@@ -19,7 +19,7 @@ def BasicAnalysisPromptFactory(config: user_config, filetype: str) -> ChatPrompt
     """
     ovrd = get_overrides(config, filetype)
     result = ChatPromptTemplate.from_messages([
-        ("system", f"{general_analysis_system_prompt_function()}"),
+        ("system", f"{general_analysis_system_prompt_function(ovrd)}"),
         ("human", "\n{{{file_content}}}\n\n"),
         ], template_format="mustache")
     return result

@@ -119,7 +119,7 @@ def parse_source(source: str) -> tuple[list[str], list[dict[Literal["name", "lev
 
 def resolve_absolute_import(absolute_import_statement: str, root_project: str) -> Path | None:
     """
-    This function resolves the absolute import statement by walking down each of its steps until a file is found. 
+    This function resolves the absolute import statement by walking down each of its steps until a file is found.
     """
     current_step = Path(root_project)
 

@@ -13,7 +13,8 @@ dependencies = [
     "langchain-huggingface>=1.0.0",
     "langchain-openai>=1.1.7",
     "pygls>=2.0.1",
-    "langchain-anthropic>=0.3"
+    "langchain-anthropic>=0.3",
+    "sentence-transformers>=0.1.0",
 ]
 
 [project.scripts]

@@ -44,7 +44,7 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                         logging.info(f"searching for start : {j.start}")
                         logging.info(f"searching for end : {j.end}")
                 
-                if isinstance(j.start, Tuple):
+                if isinstance(j.start, tuple):
                     if isinstance(document, TextDocument):
                         pos_start = grep(j.start[0], document.source)[j.start[1] - 1]
                     else:

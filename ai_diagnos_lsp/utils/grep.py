@@ -1,8 +1,8 @@
-from typing import Union, List, Tuple
-import re
 import logging
 import os
-import html
+import re
+from typing import List, Tuple, Union
+
 
 def grep(pattern: str, lines: Union[str, List[str]], ignore_case: bool = False) -> List[Tuple[int, int]]:
     try:

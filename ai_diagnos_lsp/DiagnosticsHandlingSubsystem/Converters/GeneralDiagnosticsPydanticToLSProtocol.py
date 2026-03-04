@@ -66,10 +66,10 @@ def GeneralDiagnosticsPydanticToLSProtocol(ls: AIDiagnosLSP,
                     else:
                         pos_end = grep(j.end, document)[0]
                     
-                pos_line_start = pos_start[0]
-                pos_char_start = pos_start[1]
-                pos_line_end = pos_end[0]
-                pos_char_end = pos_end[1]
+                pos_line_start = pos_start[0] - 1
+                pos_char_start = pos_start[1] + 1 
+                pos_line_end = pos_end[0] - 1
+                pos_char_end = pos_end[1] + 1
 
                 if os.getenv("AI_DIAGNOS_LOG") is not None:
                     logging.info(f"found {j.start} at line : {pos_line_start}, char : {pos_char_start}")

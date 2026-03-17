@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, TypedDict
 import time
 import logging
 import numpy as np
+import json
 import os
 from pathlib import Path
 from urllib.parse import urlparse, unquote
@@ -90,6 +91,9 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
             logging.error(f"Load all diagnostics thread encountered the following exception: {e}")
     finally:
         curr.close()
+
+def __embedding_thread__(jsons: list[dict]):
+    raise NotImplementedError("embeddding thread not yet implemented. (diagnostics handling subsystem main.py line 95)")
 
 class DiagnosticsHandlingSubsystemClass:
     """
@@ -184,14 +188,17 @@ class DiagnosticsHandlingSubsystemClass:
             else:
                 json_strs.append(i)
 
-        del fetch
-
-        for i in json_strs:
-            jsons.append(json.loads(i))
-
-        del json_strs
-
+        if len(json_strs) > 0:
+            for i in json_strs:
+                jsons.append(json.loads(i))
+            threading.Thread(
+                    target=__embedding_thread__,
+                    args=(jsons,),
+                    daemon=True
+                    ).start()
         
+        diagnostics_texts = []
+        diagnostics_json = diagnostics.model_dump_json()
 
 
     def register_file_write(self, document_uri: str):

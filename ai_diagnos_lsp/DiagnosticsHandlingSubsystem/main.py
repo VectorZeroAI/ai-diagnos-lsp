@@ -6,6 +6,7 @@ import threading
 from typing import TYPE_CHECKING, TypedDict
 import time
 import logging
+import numpy as np
 import os
 from pathlib import Path
 from urllib.parse import urlparse, unquote
@@ -24,7 +25,7 @@ from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPy
 if os.getenv('AI_DIAGNOS_LOG') is not None:
     LOG = True
 else:
-    LOG = False # # pyright: ignore
+    LOG = False # pyright: ignore
 
 
 class DiagnosticsSubsystemConfig(TypedDict):
@@ -144,6 +145,7 @@ class DiagnosticsHandlingSubsystemClass:
             CREATE TABLE IF NOT EXISTS diagnostics_{name}(
                 uri TEXT NOT NULL,
                 diagnostics TEXT UNIQUE NOT NULL,
+                diagnostics_emb BLOB,
                 created_at REAL NOT NULL,
                 FOREIGN KEY (uri) REFERENCES files ON DELETE CASCADE
                 )
@@ -153,7 +155,7 @@ class DiagnosticsHandlingSubsystemClass:
         CREATE VIEW IF NOT EXISTS all_diagnostics_view AS \n
         """
         for name in self.ls.SUPPORTED_DIAGNOSTIC_TYPES:
-            view_creation_script = view_creation_script + f"SELECT uri, '{name}' AS diagnostics_type, diagnostics, created_at FROM diagnostics_{name} \n \n"
+            view_creation_script = view_creation_script + f"SELECT uri, '{name}' AS diagnostics_type, diagnostics, created_at, diagnostics_emb FROM diagnostics_{name} \n \n"
             if self.ls.SUPPORTED_DIAGNOSTIC_TYPES.index(name) != len(self.ls.SUPPORTED_DIAGNOSTIC_TYPES) - 1:
                 view_creation_script = view_creation_script + "UNION ALL \n"
 
@@ -164,6 +166,33 @@ class DiagnosticsHandlingSubsystemClass:
 
         curr.close()
         return
+
+    def __deduplicate__(self, diagnostics: GeneralDiagnosticsPydanticObjekt):
+        curr = self.conn.cursor()
+
+        fetch = curr.execute("""
+        SELECT COALESCE(diagnostics_emb, diagnostics) AS result FROM all_diagnostics_view
+                             """).fetchall()
+
+        blobs = []
+        json_strs = []
+        jsons = []
+        
+        for i in fetch:
+            if isinstance(i, bytes):
+                blobs.append(i)
+            else:
+                json_strs.append(i)
+
+        del fetch
+
+        for i in json_strs:
+            jsons.append(json.loads(i))
+
+        del json_strs
+
+        
+
 
     def register_file_write(self, document_uri: str):
         curr = self.conn.cursor()

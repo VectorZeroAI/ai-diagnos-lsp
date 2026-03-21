@@ -37,4 +37,3 @@ jobs:
         env:
           HATCH_INDEX_USER: __token__
           HATCH_INDEX_AUTH: ${{ secrets.PyPiToken }}
-          packages-dir: dist/

@@ -1,7 +1,11 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
 name = "AI_LSP"
-version = "0.1.0"
-description = "An LSP with langchain + openrouter API as its backend."
+version = "0.15"
+description = "An AI powered LSP providing AI highly configurable AI diagnostics."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -32,3 +36,6 @@ override-dependencies = [
 
 [tool.pyright]
 typeCheckingMode = "normal"
+
+[tool.hatch.version]
+source = "vcs"

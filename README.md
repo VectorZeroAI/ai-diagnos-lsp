@@ -264,7 +264,7 @@ A plugin parser is a single executable that acts as a parser function, that gets
 ```
 
 > [!NOTE]
-> stdin is used, not arguments.
+> stdin is used, not arguments
 
 ## License
 

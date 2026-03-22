@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations
+
+import json
+import logging
+import os
 import sqlite3
 import threading
-from typing import TYPE_CHECKING, TypedDict
 import time
-import logging
-import numpy as np
 from io import BytesIO
-from langchain_huggingface import HuggingFaceEmbeddings
-import json
-import os
 from pathlib import Path
-from urllib.parse import urlparse, unquote
+from typing import TYPE_CHECKING, TypedDict
+from urllib.parse import unquote, urlparse
 
+import numpy as np
+from langchain_huggingface import HuggingFaceEmbeddings
 from lsprotocol import types
 from pydantic import BaseModel
 
-from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import GeneralDiagnosticsPydanticObjekt
+from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import (
+    GeneralDiagnosticsPydanticObjekt,
+)
+
+from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPydanticToLSProtocol import (
+    GeneralDiagnosticsPydanticToLSProtocol,
+)
+from ai_diagnos_lsp.utils.cosine_similarity import cosine_similarity
 
 if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
-
-from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPydanticToLSProtocol import GeneralDiagnosticsPydanticToLSProtocol
-from ai_diagnos_lsp.utils.cosine_similarity import cosine_similarity
-
 
 if os.getenv('AI_DIAGNOS_LOG') is not None:
     LOG = True

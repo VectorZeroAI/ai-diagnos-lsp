@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, TypedDict
 import time
 import logging
 import numpy as np
+from langchain_huggingface import HuggingFaceEmbeddings
 import json
 import os
 from pathlib import Path
@@ -21,12 +22,15 @@ if TYPE_CHECKING:
     from ai_diagnos_lsp.AIDiagnosLSPClass import AIDiagnosLSP
 
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPydanticToLSProtocol import GeneralDiagnosticsPydanticToLSProtocol
+from ai_diagnos_lsp.utils.cosine_similarity import cosine_similarity
 
 
 if os.getenv('AI_DIAGNOS_LOG') is not None:
     LOG = True
 else:
     LOG = False # pyright: ignore
+
+DUPLICATE_SIM = 0.90
 
 
 class DiagnosticsSubsystemConfig(TypedDict):
@@ -168,6 +172,8 @@ class DiagnosticsHandlingSubsystemClass:
         threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
         threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
 
+        self.embedder = HuggingFaceEmbeddings(model="all-MiniLM-L6-v2")
+
         curr.close()
         return
 
@@ -182,24 +188,79 @@ class DiagnosticsHandlingSubsystemClass:
         json_strs = []
         jsons = []
         
-        for i in fetch:
-            if isinstance(i, bytes):
-                blobs.append(i)
+        for item in fetch:
+            if isinstance(item, bytes):
+                blobs.append(item)
             else:
-                json_strs.append(i)
+                json_strs.append(item)
 
         if len(json_strs) > 0:
-            for i in json_strs:
-                jsons.append(json.loads(i))
+            for item in json_strs:
+                jsons.append(json.loads(item))
             threading.Thread(
                     target=__embedding_thread__,
-                    args=(jsons,),
+                    args=(jsons, self.embedder),
                     daemon=True
                     ).start()
+
+        del json_strs
         
         diagnostics_texts = []
-        diagnostics_json = diagnostics.model_dump_json()
+        diagnostics_meta = []
+        diagnostics_json = json.loads(diagnostics.model_dump_json())
+        for item in diagnostics_json['diagnostics']:
+            diagnostics_texts.append(item['error_message'])
+            diagnostics_meta.append(item['start'] + item['end'] + item['severity_level'])
+        
+        embeddings = []
 
+        for item in blobs:
+            for item2 in np.load(item):
+                embeddings.append(item2)
+
+        del blobs
+
+        diagnostics_embeddings = []
+        for index, item in enumerate(diagnostics_texts):
+            diagnostics_embeddings.append(self.embedder.embed_query(item + diagnostics_meta[index]))
+        
+        max_sims = []
+
+        for item in diagnostics_embeddings:
+            max_sim = 0.000000000000000000000000004
+            for item2 in embeddings:
+                sim = cosine_similarity(item, item2)
+                if sim > max_sim:
+                    max_sim = sim
+            max_sims.append(max_sim)
+
+        deduped_diagnostics = {
+                "diagnostics": []
+                }
+
+        for index, item in enumerate(max_sims):
+            if item < DUPLICATE_SIM:
+                pass
+            else:
+                original_json_of_the_diagnostic = diagnostics_json[index]
+                deduped_diagnostics['diagnostics'].append(original_json_of_the_diagnostic)
+
+                """
+                This works the way I made the LMIA context mini work, since it has the same thing. 
+                We do a bunch of conversions over a bunch of lists, BUT WE KEEP THE ORDERING THE SAME.
+
+                That means we treat item index not as arbitrary value, but as an uniform index pointer, 
+                to the corresponding item, in every other list, whereby each list represents a conversion. 
+                
+                This way we can just grab the item from the first step, wich is loading it, 
+                """
+
+        return deduped_diagnostics
+
+        
+
+
+            
 
     def register_file_write(self, document_uri: str):
         curr = self.conn.cursor()

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, TypedDict
 import time
 import logging
 import numpy as np
+from io import BytesIO
 from langchain_huggingface import HuggingFaceEmbeddings
 import json
 import os
@@ -96,7 +97,7 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     finally:
         curr.close()
 
-def __embedding_thread__(jsons: list[dict]):
+def __embedding_thread__(jsons: list[dict], embedder: object):
     raise NotImplementedError("embeddding thread not yet implemented. (diagnostics handling subsystem main.py line 95)")
 
 class DiagnosticsHandlingSubsystemClass:
@@ -172,7 +173,7 @@ class DiagnosticsHandlingSubsystemClass:
         threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
         threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
 
-        self.embedder = HuggingFaceEmbeddings(model="all-MiniLM-L6-v2")
+        self.embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
         curr.close()
         return
@@ -215,7 +216,7 @@ class DiagnosticsHandlingSubsystemClass:
         embeddings = []
 
         for item in blobs:
-            for item2 in np.load(item):
+            for item2 in np.load(BytesIO(item)):
                 embeddings.append(item2)
 
         del blobs
@@ -227,7 +228,7 @@ class DiagnosticsHandlingSubsystemClass:
         max_sims = []
 
         for item in diagnostics_embeddings:
-            max_sim = 0.000000000000000000000000004
+            max_sim = 0.000000000004
             for item2 in embeddings:
                 sim = cosine_similarity(item, item2)
                 if sim > max_sim:
@@ -240,9 +241,7 @@ class DiagnosticsHandlingSubsystemClass:
 
         for index, item in enumerate(max_sims):
             if item < DUPLICATE_SIM:
-                pass
-            else:
-                original_json_of_the_diagnostic = diagnostics_json[index]
+                original_json_of_the_diagnostic = diagnostics_json['diagnostics'][index]
                 deduped_diagnostics['diagnostics'].append(original_json_of_the_diagnostic)
 
                 """

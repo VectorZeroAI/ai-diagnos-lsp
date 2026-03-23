@@ -14,7 +14,7 @@ def main():
     """
     The server setup and startup function. Also registeres the handlers.
     """
-    server = AIDiagnosLSP('ai_diagnos', "v0.15 DEV")
+    server = AIDiagnosLSP('ai_diagnos', "v1.2 DEV")
     
     @server.feature(types.INITIALIZE)
     def on_startup(ls: AIDiagnosLSP, params: types.InitializeParams):
@@ -46,7 +46,7 @@ def main():
                     diagnostic_provider=types.DiagnosticOptions(
                         inter_file_dependencies=True,
                         workspace_diagnostics=True,
-                        identifier="AI-diagnos-lsp"
+                        identifier="ai_diagnos_lsp"
                         )
                     )
                 )

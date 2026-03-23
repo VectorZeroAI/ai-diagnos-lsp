@@ -182,7 +182,7 @@ class DiagnosticsHandlingSubsystemClass:
         curr.close()
         return
 
-    def __deduplicate__(self, diagnostics: GeneralDiagnosticsPydanticObjekt):
+    def __deduplicate(self, diagnostics: GeneralDiagnosticsPydanticObjekt):
         curr = self.conn.cursor()
 
         fetch = curr.execute("""

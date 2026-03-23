@@ -39,3 +39,6 @@ typeCheckingMode = "normal"
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+modules = ["ai_diagnos_lsp"]

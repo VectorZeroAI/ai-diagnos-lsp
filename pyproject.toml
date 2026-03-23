@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ai_diagnos_lsp"
-version = "1.2"
+dynamic = ["version"]
 description = "An AI powered LSP providing AI highly configurable AI diagnostics."
 readme = "README.md"
 requires-python = ">=3.12"

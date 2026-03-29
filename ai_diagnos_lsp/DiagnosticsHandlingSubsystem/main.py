@@ -7,6 +7,7 @@ import logging
 import os
 import sqlite3
 import threading
+import queue
 import time
 from io import BytesIO
 from pathlib import Path
@@ -101,8 +102,11 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     finally:
         curr.close()
 
-def __embedding_thread__(jsons: list[dict], embedder: object):
-    raise NotImplementedError("embeddding thread not yet implemented. (diagnostics handling subsystem main.py line 95)")
+def _embedder_thread(embedder: object):
+    """
+    The background embedder thread. 
+    reads values out of a threadding.Queue, embedds and updates them into the DB rows. 
+    """
 
 class DiagnosticsHandlingSubsystemClass:
     """
@@ -123,6 +127,7 @@ class DiagnosticsHandlingSubsystemClass:
 
 
         self.ls = ls
+        self.embedding_queue = queue.Queue(9999)
         try:
             self.ttl_seconds_until_deletion = ls.config['DiagnosticsSubsystem']['ttl_until_deletion']
             self.ttl_seconds_until_invalidation = ls.config['DiagnosticsSubsystem']['ttl_until_invalidation']
@@ -182,88 +187,41 @@ class DiagnosticsHandlingSubsystemClass:
         curr.close()
         return
 
-    def __deduplicate(self, diagnostics: GeneralDiagnosticsPydanticObjekt):
+    def _deduplicate(self, new_diagnostics: GeneralDiagnosticsPydanticObjekt):
         curr = self.conn.cursor()
-
         fetch = curr.execute("""
-        SELECT COALESCE(diagnostics_emb, diagnostics) AS result FROM all_diagnostics_view
+        SELECT diagnostics, diagnostic_emb FROM all_diagnostics_view
                              """).fetchall()
-
-        blobs = []
-        json_strs = []
-        jsons = []
-        
-        for item in fetch:
-            if isinstance(item, bytes):
-                blobs.append(item)
+        JSON = 0
+        EMB = 1
+        emb_rows = []
+        for row in fetch:
+            if row[EMB] is None:
+                pass
+                # Add an appension to a queue once queue is there
             else:
-                json_strs.append(item)
+                emb_rows.append(row)
 
-        if len(json_strs) > 0:
-            for item in json_strs:
-                jsons.append(json.loads(item))
-            threading.Thread(
-                    target=__embedding_thread__,
-                    args=(jsons, self.embedder),
-                    daemon=True
-                    ).start()
+        new_diagnostic_json = new_diagnostics.model_dump()
 
-        del json_strs
-        
-        diagnostics_texts = []
-        diagnostics_meta = []
-        diagnostics_json = json.loads(diagnostics.model_dump_json())
-        for item in diagnostics_json['diagnostics']:
-            diagnostics_texts.append(item['error_message'])
-            diagnostics_meta.append(item['start'] + item['end'] + item['severity_level'])
-        
-        embeddings = []
-
-        for item in blobs:
-            for item2 in np.load(BytesIO(item)):
-                embeddings.append(item2)
-
-        del blobs
-
-        diagnostics_embeddings = []
-        for index, item in enumerate(diagnostics_texts):
-            diagnostics_embeddings.append(self.embedder.embed_query(item + diagnostics_meta[index]))
-        
-        max_sims = []
-
-        for item in diagnostics_embeddings:
+        duplicates = []
+        for error in new_diagnostic_json['diagnostics']:
+            new_emb = self.embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
             max_sim = 0.000000000004
-            for item2 in embeddings:
-                sim = cosine_similarity(item, item2)
-                if sim > max_sim:
-                    max_sim = sim
-            max_sims.append(max_sim)
+            for row in emb_rows:
+                buf = BytesIO(row[EMB])
+                for embedding in np.load(buf):
+                    sim = cosine_similarity(new_emb, embedding)
+                    if sim > max_sim:
+                        max_sim = sim
 
-        deduped_diagnostics = {
-                "diagnostics": []
-                }
+            if max_sim > 0.8999:
+                duplicates.append(error)
 
-        for index, item in enumerate(max_sims):
-            if item < DUPLICATE_SIM:
-                original_json_of_the_diagnostic = diagnostics_json['diagnostics'][index]
-                deduped_diagnostics['diagnostics'].append(original_json_of_the_diagnostic)
+        for i in duplicates:
+            new_diagnostic_json['diagnostics'].remove(i)
 
-                """
-                This works the way I made the LMIA context mini work, since it has the same thing. 
-                We do a bunch of conversions over a bunch of lists, BUT WE KEEP THE ORDERING THE SAME.
-
-                That means we treat item index not as arbitrary value, but as an uniform index pointer, 
-                to the corresponding item, in every other list, whereby each list represents a conversion. 
-                
-                This way we can just grab the item from the first step, wich is loading it, 
-                """
-
-        return deduped_diagnostics
-
-        
-
-
-            
+        return GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json)
 
     def register_file_write(self, document_uri: str):
         curr = self.conn.cursor()

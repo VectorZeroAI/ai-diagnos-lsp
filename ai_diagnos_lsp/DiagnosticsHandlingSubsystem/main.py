@@ -102,7 +102,7 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     finally:
         curr.close()
 
-def _embedder_thread(conn: sqlite3.Connection, embedder: HuggingFaceEmbeddings, queue: queue.Queue):
+def _embedder_thread(conn: sqlite3.Connection, embedder: HuggingFaceEmbeddings, q: queue.Queue):
     """
     The background embedder thread. 
     reads values out of a threadding.Queue, embedds and updates them into the DB rows. 
@@ -110,20 +110,19 @@ def _embedder_thread(conn: sqlite3.Connection, embedder: HuggingFaceEmbeddings, 
     curr = conn.cursor()
 
     while True:
-        row = queue.get()
+        row = q.get()
         embeddings = []
         buf = BytesIO()
         for error in row[0]['diagnostics']:
             emb = embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
             embeddings.append(emb)
 
-        for i in embeddings:
-            np.save(buf, embeddings)
+        np.save(buf, embeddings)
 
         blob = buf.getvalue()
         curr.execute(f"""
         UPDATE diagnostics_{row[2]} SET diagnostics_emb = ? WHERE diagnostics = ?
-                     """, (blob, row))
+                     """, (blob, row[0]))
 
     curr.close()
 
@@ -209,7 +208,7 @@ class DiagnosticsHandlingSubsystemClass:
     def _deduplicate(self, new_diagnostics: GeneralDiagnosticsPydanticObjekt):
         curr = self.conn.cursor()
         fetch = curr.execute("""
-        SELECT diagnostics, diagnostic_emb, diagnostics_type FROM all_diagnostics_view
+        SELECT diagnostics, diagnostics_emb, diagnostics_type FROM all_diagnostics_view
                              """).fetchall()
         JSON = 0
         EMB = 1

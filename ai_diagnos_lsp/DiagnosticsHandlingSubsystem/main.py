@@ -273,13 +273,15 @@ class DiagnosticsHandlingSubsystemClass:
     def save_new_diagnostic(self, diagnostics: GeneralDiagnosticsPydanticObjekt, document_uri: str, analysis_type: str) -> bool:
         """
         Registers the diagnostic to the DataBase. DOES NOT PUBLISH THEM TO THE CLIENT
+        Also deduplicates via the new _deduplicate method.
         """
         curr = self.conn.cursor()
         try:
             with self.db_lock:
+                diagnostics_deduped = self._deduplicate(diagnostics)
                 curr.execute(f"""
                 INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at) VALUES(?, ?, ?)
-                                  """, (document_uri, diagnostics.model_dump_json(), time.time()))
+                                  """, (document_uri, diagnostics_deduped, time.time()))
         except Exception as e:
             if LOG:
                 logging.error(f"Couldnt register new diagnosic due to following error: {e}")

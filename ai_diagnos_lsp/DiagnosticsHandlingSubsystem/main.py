@@ -199,6 +199,7 @@ class DiagnosticsHandlingSubsystemClass:
 
         threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
         threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
+        threading.Thread(target=_embedder_thread, args=(self.conn, self.embedder, self.embedding_queue), daemon=True).start()
 
         self.embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
@@ -207,38 +208,40 @@ class DiagnosticsHandlingSubsystemClass:
 
     def _deduplicate(self, new_diagnostics: GeneralDiagnosticsPydanticObjekt):
         curr = self.conn.cursor()
-        fetch = curr.execute("""
-        SELECT diagnostics, diagnostics_emb, diagnostics_type FROM all_diagnostics_view
-                             """).fetchall()
-        JSON = 0
-        EMB = 1
-        TYPE = 2
-        emb_rows = []
-        for row in fetch:
-            if row[EMB] is None:
-                self.embedding_queue.put(row)
-            else:
-                emb_rows.append(row)
+        try:
+            fetch = curr.execute("""
+            SELECT diagnostics, diagnostics_emb, diagnostics_type FROM all_diagnostics_view
+                                 """).fetchall()
+            JSON = 0
+            EMB = 1
+            TYPE = 2
+            emb_rows = []
+            for row in fetch:
+                if row[EMB] is None:
+                    self.embedding_queue.put(row)
+                else:
+                    emb_rows.append(row)
 
-        new_diagnostic_json = new_diagnostics.model_dump()
+            new_diagnostic_json = new_diagnostics.model_dump()
 
-        duplicates = []
-        for error in new_diagnostic_json['diagnostics']:
-            new_emb = self.embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
-            max_sim = 0.000000000004
-            for row in emb_rows:
-                buf = BytesIO(row[EMB])
-                for embedding in np.load(buf):
-                    sim = cosine_similarity(new_emb, embedding)
-                    if sim > max_sim:
-                        max_sim = sim
+            duplicates = []
+            for error in new_diagnostic_json['diagnostics']:
+                new_emb = self.embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
+                max_sim = 0.000000000004
+                for row in emb_rows:
+                    buf = BytesIO(row[EMB])
+                    for embedding in np.load(buf):
+                        sim = cosine_similarity(new_emb, embedding)
+                        if sim > max_sim:
+                            max_sim = sim
 
-            if max_sim > 0.8999:
-                duplicates.append(error)
+                if max_sim > 0.8999:
+                    duplicates.append(error)
 
-        for i in duplicates:
-            new_diagnostic_json['diagnostics'].remove(i)
-
+            for i in duplicates:
+                new_diagnostic_json['diagnostics'].remove(i)
+        finally:
+            curr.close()
         return GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json)
 
     def register_file_write(self, document_uri: str):

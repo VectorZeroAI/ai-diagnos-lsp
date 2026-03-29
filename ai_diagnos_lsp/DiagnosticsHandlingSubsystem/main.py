@@ -197,8 +197,9 @@ class DiagnosticsHandlingSubsystemClass:
         curr.execute(view_creation_script)
         try:
             self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
-        except Exception as e:
+        except Exception:
             self.embedder = SentenceTransformer("/data/data/com.termux/files/home/.cache/huggingface/hub/all-MiniLM-L6-v2")
+            # Dont ask how the fuck I came up with this. Its a fix to a local bug on one of my mashines. 
         threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
         threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
         threading.Thread(target=_embedder_thread, args=(self.conn, self.embedder, self.embedding_queue), daemon=True).start()

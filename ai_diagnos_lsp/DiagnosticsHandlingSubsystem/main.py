@@ -227,7 +227,7 @@ class DiagnosticsHandlingSubsystemClass:
             duplicates = []
             for error in new_diagnostic_json['diagnostics']:
                 new_emb = self.embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
-                max_sim = 0.000000000004
+                max_sim = 0.000004
                 for row in emb_rows:
                     buf = BytesIO(row[EMB])
                     for embedding in np.load(buf):
@@ -240,9 +240,10 @@ class DiagnosticsHandlingSubsystemClass:
 
             for i in duplicates:
                 new_diagnostic_json['diagnostics'].remove(i)
+
+            return GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json)
         finally:
             curr.close()
-        return GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json)
 
     def register_file_write(self, document_uri: str):
         curr = self.conn.cursor()

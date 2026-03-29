@@ -13,9 +13,8 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 from urllib.parse import unquote, urlparse
-
+from sentence_transformers import SentenceTransformer
 import numpy as np
-from langchain_huggingface import HuggingFaceEmbeddings
 from lsprotocol import types
 from pydantic import BaseModel
 
@@ -102,7 +101,7 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     finally:
         curr.close()
 
-def _embedder_thread(conn: sqlite3.Connection, embedder: HuggingFaceEmbeddings, q: queue.Queue):
+def _embedder_thread(conn: sqlite3.Connection, embedder: SentenceTransformer, q: queue.Queue):
     """
     The background embedder thread. 
     reads values out of a threadding.Queue, embedds and updates them into the DB rows. 
@@ -114,7 +113,7 @@ def _embedder_thread(conn: sqlite3.Connection, embedder: HuggingFaceEmbeddings, 
         embeddings = []
         buf = BytesIO()
         for error in row[0]['diagnostics']:
-            emb = embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
+            emb = embedder.encode("\n".join((error['error_message'], error['start'], error['end'])))
             embeddings.append(emb)
 
         np.save(buf, embeddings)
@@ -196,12 +195,13 @@ class DiagnosticsHandlingSubsystemClass:
                 view_creation_script = view_creation_script + "UNION ALL \n"
 
         curr.execute(view_creation_script)
-
+        try:
+            self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        except Exception as e:
+            self.embedder = SentenceTransformer("/data/data/com.termux/files/home/.cache/huggingface/hub/all-MiniLM-L6-v2")
         threading.Thread(target=self.TTLBasedDeletionThread, daemon=True).start()
         threading.Thread(target=self.TTLBasedDiagnosticsInvalidationThread, daemon=True).start()
         threading.Thread(target=_embedder_thread, args=(self.conn, self.embedder, self.embedding_queue), daemon=True).start()
-
-        self.embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
         curr.close()
         return
@@ -226,7 +226,7 @@ class DiagnosticsHandlingSubsystemClass:
 
             duplicates = []
             for error in new_diagnostic_json['diagnostics']:
-                new_emb = self.embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
+                new_emb = self.embedder.encode("\n".join((error['error_message'], error['start'], error['end'])))
                 max_sim = 0.000004
                 for row in emb_rows:
                     buf = BytesIO(row[EMB])
@@ -235,7 +235,7 @@ class DiagnosticsHandlingSubsystemClass:
                         if sim > max_sim:
                             max_sim = sim
 
-                if max_sim > 0.8999:
+                if max_sim > DUPLICATE_SIM:
                     duplicates.append(error)
 
             for i in duplicates:

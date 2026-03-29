@@ -102,11 +102,30 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     finally:
         curr.close()
 
-def _embedder_thread(embedder: object):
+def _embedder_thread(conn: sqlite3.Connection, embedder: HuggingFaceEmbeddings, queue: queue.Queue):
     """
     The background embedder thread. 
     reads values out of a threadding.Queue, embedds and updates them into the DB rows. 
     """
+    curr = conn.cursor()
+
+    while True:
+        row = queue.get()
+        embeddings = []
+        buf = BytesIO()
+        for error in row[0]['diagnostics']:
+            emb = embedder.embed_query("\n".join((error['error_message'], error['start'], error['end'])))
+            embeddings.append(emb)
+
+        for i in embeddings:
+            np.save(buf, embeddings)
+
+        blob = buf.getvalue()
+        curr.execute(f"""
+        UPDATE diagnostics_{row[2]} SET diagnostics_emb = ? WHERE diagnostics = ?
+                     """, (blob, row))
+
+    curr.close()
 
 class DiagnosticsHandlingSubsystemClass:
     """
@@ -190,15 +209,15 @@ class DiagnosticsHandlingSubsystemClass:
     def _deduplicate(self, new_diagnostics: GeneralDiagnosticsPydanticObjekt):
         curr = self.conn.cursor()
         fetch = curr.execute("""
-        SELECT diagnostics, diagnostic_emb FROM all_diagnostics_view
+        SELECT diagnostics, diagnostic_emb, diagnostics_type FROM all_diagnostics_view
                              """).fetchall()
         JSON = 0
         EMB = 1
+        TYPE = 2
         emb_rows = []
         for row in fetch:
             if row[EMB] is None:
-                pass
-                # Add an appension to a queue once queue is there
+                self.embedding_queue.put(row)
             else:
                 emb_rows.append(row)
 

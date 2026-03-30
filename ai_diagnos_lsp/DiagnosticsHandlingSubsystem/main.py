@@ -244,7 +244,7 @@ class DiagnosticsHandlingSubsystemClass:
 
             duplicates = []
             for error in new_diagnostic_json['diagnostics']:
-                new_emb = self.embedder.encode("\n".join((error['error_message'], error['start'], error['end'])))
+                new_emb = self.embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))
                 max_sim = 0.000004
                 for row in emb_rows:
                     buf = BytesIO(row[EMB])
@@ -307,7 +307,7 @@ class DiagnosticsHandlingSubsystemClass:
                 diagnostics_deduped = self._deduplicate(diagnostics)
                 curr.execute(f"""
                 INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at) VALUES(?, ?, ?)
-                                  """, (document_uri, diagnostics_deduped, time.time()))
+                                  """, (document_uri, diagnostics_deduped.model_dump_json(), time.time()))
         except Exception as e:
             if LOG:
                 logging.error(f"Couldnt register new diagnosic due to following error: {e}")

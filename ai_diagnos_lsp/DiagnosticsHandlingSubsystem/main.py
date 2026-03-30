@@ -109,19 +109,30 @@ def _embedder_thread(conn: sqlite3.Connection, embedder: SentenceTransformer, q:
     curr = conn.cursor()
 
     while True:
-        row = q.get()
-        embeddings = []
-        buf = BytesIO()
-        for error in row[0]['diagnostics']:
-            emb = embedder.encode("\n".join((error['error_message'], error['start'], error['end'])))
-            embeddings.append(emb)
+        try:
+            row = q.get()
+            if LOG:
+                logging.info(f"embedder thread: got the row with this json {row[0]}@{row[2]}")
+            embeddings = []
+            buf = BytesIO()
+            for error in row[0]['diagnostics']:
+                emb = embedder.encode("\n".join((error['error_message'], error['start'], error['end'])))
+                embeddings.append(emb)
+                if LOG:
+                    logging.info(f"embedder thread: embedded this shit: {error}, and appened it to the list")
 
-        np.save(buf, embeddings)
+            np.save(buf, embeddings)
 
-        blob = buf.getvalue()
-        curr.execute(f"""
-        UPDATE diagnostics_{row[2]} SET diagnostics_emb = ? WHERE diagnostics = ?
-                     """, (blob, row[0]))
+            blob = buf.getvalue()
+            if LOG:
+                logging.info(f"The full saved blob of blobs, or however you name it, is this: {blob}")
+            curr.execute(f"""
+            UPDATE diagnostics_{row[2]} SET diagnostics_emb = ? WHERE diagnostics = ?
+                         """, (blob, row[0]))
+        except Exception as e:
+            if LOG:
+                logging.info(f"embedding thread encoutered the following exeption: {e}")
+            raise RuntimeError(f"embedding thread encoutered the following exeption: {e}") from e
 
     curr.close()
 
@@ -216,14 +227,20 @@ class DiagnosticsHandlingSubsystemClass:
             JSON = 0
             EMB = 1
             TYPE = 2
+            
             emb_rows = []
+
             for row in fetch:
                 if row[EMB] is None:
                     self.embedding_queue.put(row)
+                    if LOG:
+                        logging.info(f"put this element into the embedding queue {row[JSON]}@{row[TYPE]}")
                 else:
                     emb_rows.append(row)
 
             new_diagnostic_json = new_diagnostics.model_dump()
+            if LOG:
+                logging.info(f"New diagnostic gotten by dedup function is: {new_diagnostic_json}")
 
             duplicates = []
             for error in new_diagnostic_json['diagnostics']:
@@ -238,11 +255,19 @@ class DiagnosticsHandlingSubsystemClass:
 
                 if max_sim > DUPLICATE_SIM:
                     duplicates.append(error)
+                    if LOG:
+                        logging.info(f"Classified {error} as duplicate.")
 
             for i in duplicates:
                 new_diagnostic_json['diagnostics'].remove(i)
+                if LOG:
+                    logging.info(f"removed {i} as duplicate")
 
             return GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json)
+        except Exception as e:
+            if LOG:
+                logging.error(f"The deduplication function encoutered the following error: {e}")
+            raise RuntimeError(f"The deduplication function encoutered the following error: {e}") from e
         finally:
             curr.close()
 

@@ -82,19 +82,23 @@ def _load_all_diagnostics_thread(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
             diagnostics_per_file[i[0]] = pydantic_objekts_list
 
         for i in diagnostics_per_file.items():
-            document = Path(unquote(urlparse(i[0]).path)).read_text() # pyright: ignore # Not my problem, its the libs problem. I everything correct on my side
-            document_of_type_ls = ls.workspace.get_text_document(i[0])
-            converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(ls, i[1], document)
-            ls.diagnostics[i[0]] = (document_of_type_ls.version, 
-                                         converted_to_lsp_format
-                                         )
-            ls.text_document_publish_diagnostics(
-                    types.PublishDiagnosticsParams(
-                        uri=document_of_type_ls.uri,
-                        diagnostics=converted_to_lsp_format,
-                        version=document_of_type_ls.version
+            try:
+                document = ls.workspace.get_text_document(i[0])
+                converted_to_lsp_format = GeneralDiagnosticsPydanticToLSProtocol(ls, i[1], document.source)
+                ls.diagnostics[i[0]] = (document.version, 
+                                             converted_to_lsp_format
+                                             )
+                ls.text_document_publish_diagnostics(
+                        types.PublishDiagnosticsParams(
+                            uri=document.uri,
+                            diagnostics=converted_to_lsp_format,
+                            version=document.version
+                            )
                         )
-                    )
+            except Exception as e:
+                if LOG:
+                    logging.error(f"_load_all_diagnostics_thread encoutered the following exception {e}")
+                pass
 
         for i in all_diagnostics_for_every_file:
             if i[2] is None:
@@ -123,6 +127,7 @@ def _embedder_thread(conn: sqlite3.Connection, embedder: SentenceTransformer, q:
             for i in row:
                 mutable_row.append(i)
             row = mutable_row
+            original_json = row[0]
             row[0] = json.loads(row[0])
             for error in row[0]['diagnostics']:
                 emb = embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))
@@ -137,11 +142,10 @@ def _embedder_thread(conn: sqlite3.Connection, embedder: SentenceTransformer, q:
                 logging.info(f"The full saved blob of blobs, or however you name it, is this: {blob}")
             curr.execute(f"""
             UPDATE diagnostics_{row[2]} SET diagnostics_emb = ? WHERE diagnostics = ?
-                         """, (blob, row[0]))
+                         """, (blob, original_json))
         except Exception as e:
             if LOG:
                 logging.info(f"embedding thread encoutered the following exeption: {e}")
-            raise RuntimeError(f"embedding thread encoutered the following exeption: {e}") from e
 
     curr.close()
 
@@ -253,12 +257,12 @@ class DiagnosticsHandlingSubsystemClass:
 
             new_emb_list = []
             duplicates = []
-            max_sim = 0.000004
             save_buf = BytesIO()
 
             for error in new_diagnostic_json['diagnostics']:
                 new_emb = self.embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))
                 new_emb_list.append(new_emb)
+                max_sim = 0.000004
 
                 for row in emb_rows:
 

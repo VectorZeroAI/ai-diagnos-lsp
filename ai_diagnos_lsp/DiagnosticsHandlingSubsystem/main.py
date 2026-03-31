@@ -5,23 +5,21 @@ from __future__ import annotations
 import json
 import logging
 import os
+import queue
 import sqlite3
 import threading
-import queue
 import time
 from io import BytesIO
-from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
-from urllib.parse import unquote, urlparse
-from sentence_transformers import SentenceTransformer
+
 import numpy as np
 from lsprotocol import types
 from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
 
 from ai_diagnos_lsp.AnalysisSubsystem.analysers.chains.GeneralDiagnosticsPydanticOutputParser import (
     GeneralDiagnosticsPydanticObjekt,
 )
-
 from ai_diagnos_lsp.DiagnosticsHandlingSubsystem.Converters.GeneralDiagnosticsPydanticToLSProtocol import (
     GeneralDiagnosticsPydanticToLSProtocol,
 )
@@ -231,12 +229,18 @@ class DiagnosticsHandlingSubsystemClass:
         curr.close()
         return
 
-    def _deduplicate(self, new_diagnostics: GeneralDiagnosticsPydanticObjekt):
+    def _deduplicate(self, new_diagnostics: GeneralDiagnosticsPydanticObjekt, target_file_uri: str):
         curr = self.conn.cursor()
         try:
+            new_diagnostic_json = new_diagnostics.model_dump()
+            new_emb_list = []
+            duplicates = []
+            save_buf = BytesIO()
+
             fetch = curr.execute("""
-            SELECT diagnostics, diagnostics_emb, diagnostics_type FROM all_diagnostics_view
-                                 """).fetchall()
+            SELECT diagnostics, diagnostics_emb, diagnostics_type FROM all_diagnostics_view WHERE uri = ?
+                                 """, (target_file_uri,)).fetchall()
+
             JSON = 0
             EMB = 1
             TYPE = 2
@@ -251,13 +255,9 @@ class DiagnosticsHandlingSubsystemClass:
                 else:
                     emb_rows.append(row)
 
-            new_diagnostic_json = new_diagnostics.model_dump()
             if LOG:
                 logging.info(f"New diagnostic gotten by dedup function is: {new_diagnostic_json}")
 
-            new_emb_list = []
-            duplicates = []
-            save_buf = BytesIO()
 
             for error in new_diagnostic_json['diagnostics']:
                 new_emb = self.embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))
@@ -289,6 +289,7 @@ class DiagnosticsHandlingSubsystemClass:
                     GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json),
                     save_buf.getvalue()
                     )
+
         except Exception as e:
             if LOG:
                 logging.error(f"The deduplication function encoutered the following error: {e}")
@@ -329,7 +330,7 @@ class DiagnosticsHandlingSubsystemClass:
         curr = self.conn.cursor()
         try:
             with self.db_lock:
-                diagnostics_deduped = self._deduplicate(diagnostics)
+                diagnostics_deduped = self._deduplicate(diagnostics, document_uri)
                 curr.execute(f"""
                 INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at, diagnostics_emb) VALUES(?, ?, ?, ?)
                               """,(

@@ -278,12 +278,13 @@ class DiagnosticsHandlingSubsystemClass:
                     if LOG:
                         logging.info(f"Classified {error} as duplicate.")
 
-            np.save(save_buf, new_emb_list)
-
             for i in duplicates:
+                del new_emb_list[new_diagnostic_json['diagnostics'].index(i)]
                 new_diagnostic_json['diagnostics'].remove(i)
                 if LOG:
                     logging.info(f"removed {i} as duplicate")
+
+            np.save(save_buf, new_emb_list)
 
             return (
                     GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json),

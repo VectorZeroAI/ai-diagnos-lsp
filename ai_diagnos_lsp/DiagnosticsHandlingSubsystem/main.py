@@ -246,10 +246,10 @@ class DiagnosticsHandlingSubsystemClass:
             new_emb_list = []
             duplicates = []
             max_sim = 0.000004
+            save_buf = BytesIO()
 
             for error in new_diagnostic_json['diagnostics']:
                 new_emb = self.embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))
-
                 new_emb_list.append(new_emb)
 
                 for row in emb_rows:
@@ -266,8 +266,7 @@ class DiagnosticsHandlingSubsystemClass:
                     if LOG:
                         logging.info(f"Classified {error} as duplicate.")
 
-                save_buf = BytesIO()
-                np.save(save_buf, new_emb_list)
+            np.save(save_buf, new_emb_list)
 
             for i in duplicates:
                 new_diagnostic_json['diagnostics'].remove(i)

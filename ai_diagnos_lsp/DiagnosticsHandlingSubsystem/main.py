@@ -35,7 +35,7 @@ if os.getenv('AI_DIAGNOS_LOG') is not None:
 else:
     LOG = False # pyright: ignore
 
-DUPLICATE_SIM = 0.90
+DUPLICATE_SIM = 0.80
 
 
 class DiagnosticsSubsystemConfig(TypedDict):

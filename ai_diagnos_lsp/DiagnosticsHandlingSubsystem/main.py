@@ -49,7 +49,7 @@ class DiagnosticsSubsystemConfig(TypedDict):
     check_ttl_for_invalidation: int | float
 
 
-def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
+def _load_all_diagnostics_thread(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     """
     The internal thread function that is spawned to concurently load all the diagnostics.
     An optimisations to not block the main thread for a long time, as this function is going
@@ -57,7 +57,7 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     """
     try:
         all_diagnostics_for_every_file = curr.execute("""
-        SELECT diagnostics, uri FROM all_diagnostics_view
+        SELECT diagnostics, uri, diagnostics_emb FROM all_diagnostics_view
                                                           """).fetchall()
         
         diagnostics_sorted_per_file: dict[str, list[str]] = {}
@@ -95,6 +95,9 @@ def __load_all_diagnostics_thread__(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
                         version=document_of_type_ls.version
                         )
                     )
+        for i in all_diagnostics_for_every_file:
+            if i[2] is None:
+                ls.DiagnosticsHandlingSubsystem.embedding_queue.put(i)
     except Exception as e:
         if LOG:
             logging.error(f"Load all diagnostics thread encountered the following exception: {e}")
@@ -347,7 +350,7 @@ class DiagnosticsHandlingSubsystemClass:
         curr = self.conn.cursor()
         try:
             threading.Thread(
-                    target=__load_all_diagnostics_thread__,
+                    target=_load_all_diagnostics_thread,
                     daemon=True,
                     args=[self.ls, curr]
                     ).start()

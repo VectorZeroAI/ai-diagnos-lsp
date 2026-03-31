@@ -118,6 +118,10 @@ def _embedder_thread(conn: sqlite3.Connection, embedder: SentenceTransformer, q:
                 logging.info(f"embedder thread: got the row with this json {row[0]}@{row[2]}")
             embeddings = []
             buf = BytesIO()
+            mutable_row = []
+            for i in row:
+                mutable_row.append(i)
+            row = mutable_row
             row[0] = json.loads(row[0])
             for error in row[0]['diagnostics']:
                 emb = embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))

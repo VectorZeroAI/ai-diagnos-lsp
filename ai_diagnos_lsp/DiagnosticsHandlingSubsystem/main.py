@@ -57,7 +57,7 @@ def _load_all_diagnostics_thread(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
     """
     try:
         all_diagnostics_for_every_file = curr.execute("""
-        SELECT diagnostics, uri, diagnostics_emb FROM all_diagnostics_view
+        SELECT diagnostics, uri, diagnostics_emb, diagnostics_type FROM all_diagnostics_view
                                                           """).fetchall()
         
         diagnostics_sorted_per_file: dict[str, list[str]] = {}
@@ -95,9 +95,10 @@ def _load_all_diagnostics_thread(ls: AIDiagnosLSP, curr: sqlite3.Cursor):
                         version=document_of_type_ls.version
                         )
                     )
+
         for i in all_diagnostics_for_every_file:
             if i[2] is None:
-                ls.DiagnosticsHandlingSubsystem.embedding_queue.put(i)
+                ls.DiagnosticsHandlingSubsystem.embedding_queue.put((i[0], i[2], i[3]))
     except Exception as e:
         if LOG:
             logging.error(f"Load all diagnostics thread encountered the following exception: {e}")

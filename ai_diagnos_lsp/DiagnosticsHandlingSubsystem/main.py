@@ -243,14 +243,21 @@ class DiagnosticsHandlingSubsystemClass:
             if LOG:
                 logging.info(f"New diagnostic gotten by dedup function is: {new_diagnostic_json}")
 
+            new_emb_list = []
             duplicates = []
+            max_sim = 0.000004
+
             for error in new_diagnostic_json['diagnostics']:
                 new_emb = self.embedder.encode("\n".join((error['error_message'], str(error['start']), str(error['end']))))
-                max_sim = 0.000004
+
+                new_emb_list.append(new_emb)
+
                 for row in emb_rows:
+
                     buf = BytesIO(row[EMB])
                     for embedding in np.load(buf):
                         sim = cosine_similarity(new_emb, embedding)
+
                         if sim > max_sim:
                             max_sim = sim
 
@@ -259,12 +266,18 @@ class DiagnosticsHandlingSubsystemClass:
                     if LOG:
                         logging.info(f"Classified {error} as duplicate.")
 
+                save_buf = BytesIO()
+                np.save(save_buf, new_emb_list)
+
             for i in duplicates:
                 new_diagnostic_json['diagnostics'].remove(i)
                 if LOG:
                     logging.info(f"removed {i} as duplicate")
 
-            return GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json)
+            return (
+                    GeneralDiagnosticsPydanticObjekt.model_validate(new_diagnostic_json),
+                    save_buf.getvalue()
+                    )
         except Exception as e:
             if LOG:
                 logging.error(f"The deduplication function encoutered the following error: {e}")
@@ -307,8 +320,14 @@ class DiagnosticsHandlingSubsystemClass:
             with self.db_lock:
                 diagnostics_deduped = self._deduplicate(diagnostics)
                 curr.execute(f"""
-                INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at) VALUES(?, ?, ?)
-                                  """, (document_uri, diagnostics_deduped.model_dump_json(), time.time()))
+                INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at, diagnostics_emb) VALUES(?, ?, ?)
+                              """,(
+                                    document_uri,
+                                    diagnostics_deduped[0].model_dump_json(),
+                                    time.time(),
+                                    diagnostics_deduped[1])
+                                )
+
         except Exception as e:
             if LOG:
                 logging.error(f"Couldnt register new diagnosic due to following error: {e}")

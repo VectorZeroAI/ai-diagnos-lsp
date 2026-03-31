@@ -319,7 +319,7 @@ class DiagnosticsHandlingSubsystemClass:
             with self.db_lock:
                 diagnostics_deduped = self._deduplicate(diagnostics)
                 curr.execute(f"""
-                INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at, diagnostics_emb) VALUES(?, ?, ?)
+                INSERT INTO diagnostics_{analysis_type}(uri, diagnostics, created_at, diagnostics_emb) VALUES(?, ?, ?, ?)
                               """,(
                                     document_uri,
                                     diagnostics_deduped[0].model_dump_json(),
